@@ -4,7 +4,7 @@
  * drawers for lights, climate/motion, camera, Apple TV, geyser and amp.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '1.0.0';
+const AR_HUB_VERSION = '1.2.0';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -162,6 +162,10 @@ ha-card{position:relative;overflow:hidden;color:var(--ink);font-family:var(--fb)
 .np .meta{flex:1;min-width:0}
 .np .meta b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np .meta span{font-size:11.5px;color:var(--ink-2)}
+.tvapps{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.tvapps.top{justify-content:flex-start;margin:0 0 12px}
+.tvapps .src{padding:9px 14px;font-size:12.5px}
+.tvapps .src.sel{background:rgba(155,140,255,.16);border-color:rgba(155,140,255,.55);color:var(--violet)}
 .prog{height:4px;border-radius:9px;background:var(--glass-2);margin-top:7px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--violet);border-radius:inherit;transition:width 1s linear}
 /* geyser */
@@ -456,11 +460,23 @@ class ArHomeHubCard extends HTMLElement {
   }
 
   _body_apple_tv() {
+    const top = this._config.apple_tv.apps_position === 'top';
+    const apps = `${(this._config.apple_tv.apps || []).length ? `<div class="tvapps${top ? ' top' : ''}" id="tvapps">${this._config.apple_tv.apps
+        .map((a, i) => `<button class="src" data-act="app" data-i="${i}"><ha-icon icon="${esc(a.icon || this._appIcon(a.name || a.source))}"></ha-icon>${esc(a.name || a.source)}</button>`)
+        .join('')}</div>` : ''}`;
     return `<div class="np" id="np" hidden>
         <div class="art" id="np-art"><ha-icon icon="mdi:movie-open"></ha-icon></div>
         <div class="meta"><b id="np-title"></b><span id="np-sub"></span><div class="prog"><i id="np-prog"></i></div></div>
       </div>
-      <div class="slot" id="slot-apple_tv"></div>`;
+${top ? apps : ''}
+      <div class="slot" id="slot-apple_tv"></div>
+      ${top ? '' : apps}`;
+  }
+
+  _appIcon(n = '') {
+    const m = [[/youtube/i, 'mdi:youtube'], [/netflix/i, 'mdi:netflix'], [/dstv|showmax/i, 'mdi:satellite-uplink'], [/prime|amazon/i, 'mdi:filmstrip-box'],
+      [/disney/i, 'mdi:castle'], [/spotify/i, 'mdi:spotify'], [/music/i, 'mdi:music'], [/plex/i, 'mdi:plex'], [/twitch/i, 'mdi:twitch']].find(([r]) => r.test(n));
+    return m ? m[1] : 'mdi:application';
   }
 
   _body_geyser() {
@@ -588,6 +604,18 @@ class ArHomeHubCard extends HTMLElement {
       case 'src':
         this._call('media_player', 'select_source', { entity_id: c.amp.entity, source: b.dataset.s });
         break;
+      case 'app': {
+        const t = c.apple_tv;
+        const app = t.apps[+b.dataset.i];
+        if (app.action) {
+          const [d, sv] = app.action.split('.');
+          this._call(d, sv, app.data || {});
+        } else {
+          this._call('media_player', 'select_source', { entity_id: app.entity || t.entity, source: app.source || app.name });
+        }
+        b.classList.add('sel');
+        break;
+      }
       case 'ampPower':
         this._call('media_player', 'toggle', { entity_id: c.amp.entity });
         break;
@@ -859,6 +887,12 @@ class ArHomeHubCard extends HTMLElement {
         }
         if (s.state === 'playing') chips.push(`<button class="chip tv" data-act="go" data-k="apple_tv" style="color:var(--violet)"><span class="dot"></span><span style="color:var(--ink-2)">${esc(a.app_name || 'Apple TV')} playing</span></button>`);
       }
+      const cur = (a.app_name || a.source || '').toLowerCase();
+      r.querySelectorAll('#tvapps .src').forEach((b, i) => {
+        const app = t.apps[i];
+        const n = (app.source || app.name || '').toLowerCase();
+        b.classList.toggle('sel', !!cur && !!n && s?.state !== 'off' && (cur === n || cur.includes(n) || n.includes(cur)));
+      });
       this._tvProgress();
     }
 
