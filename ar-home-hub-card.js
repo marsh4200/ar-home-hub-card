@@ -4,7 +4,7 @@
  * drawers for lights, climate/motion, camera, Apple TV, geyser and amp.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '1.2.0';
+const AR_HUB_VERSION = '1.3.0';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -166,6 +166,19 @@ ha-card{position:relative;overflow:hidden;color:var(--ink);font-family:var(--fb)
 .tvapps.top{justify-content:flex-start;margin:0 0 12px}
 .tvapps .src{padding:9px 14px;font-size:12.5px}
 .tvapps .src.sel{background:rgba(155,140,255,.16);border-color:rgba(155,140,255,.55);color:var(--violet)}
+.tvapps.icons{display:grid;grid-template-columns:repeat(auto-fit,64px);justify-content:center;gap:12px 10px}
+.tvapps.icons.top{justify-content:start}
+.app{appearance:none;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink-2);min-width:0}
+.app .tile{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;overflow:hidden;
+  background:color-mix(in srgb,var(--app,#9b8cff) 16%,rgba(255,255,255,.05));border:1px solid color-mix(in srgb,var(--app,#9b8cff) 30%,transparent);
+  color:var(--app,var(--ink));transition:transform .15s,box-shadow .3s,border-color .3s}
+.app .tile ha-icon{--mdc-icon-size:28px}
+.app .tile img{width:100%;height:100%;object-fit:cover;display:block}
+.app .lab{font-size:10.5px;font-weight:600;letter-spacing:.02em;max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app:active .tile{transform:scale(.92)}
+.app:focus-visible .tile{outline:2px solid var(--cyan);outline-offset:2px}
+.app.sel .tile{border-color:var(--violet);box-shadow:0 0 0 2px rgba(155,140,255,.45),0 0 18px rgba(155,140,255,.45)}
+.app.sel .lab{color:var(--ink)}
 .prog{height:4px;border-radius:9px;background:var(--glass-2);margin-top:7px;overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--violet);border-radius:inherit;transition:width 1s linear}
 /* geyser */
@@ -461,9 +474,19 @@ class ArHomeHubCard extends HTMLElement {
 
   _body_apple_tv() {
     const top = this._config.apple_tv.apps_position === 'top';
-    const apps = `${(this._config.apple_tv.apps || []).length ? `<div class="tvapps${top ? ' top' : ''}" id="tvapps">${this._config.apple_tv.apps
-        .map((a, i) => `<button class="src" data-act="app" data-i="${i}"><ha-icon icon="${esc(a.icon || this._appIcon(a.name || a.source))}"></ha-icon>${esc(a.name || a.source)}</button>`)
-        .join('')}</div>` : ''}`;
+    const t = this._config.apple_tv;
+    const list = t.apps || [];
+    const icons = t.apps_style !== 'chips';
+    const btn = (a, i) => {
+      const label = esc(a.name || a.source);
+      const ic = a.image
+        ? `<img alt="" src="${esc(a.image)}">`
+        : `<ha-icon icon="${esc(a.icon || this._appIcon(a.name || a.source))}"></ha-icon>`;
+      if (!icons) return `<button class="src" data-act="app" data-i="${i}">${ic}${label}</button>`;
+      return `<button class="app" data-act="app" data-i="${i}" aria-label="${label}"${a.color ? ` style="--app:${esc(a.color)}"` : ''}>
+          <span class="tile">${ic}</span>${t.show_app_names === false ? '' : `<span class="lab">${label}</span>`}</button>`;
+    };
+    const apps = list.length ? `<div class="tvapps${icons ? ' icons' : ''}${top ? ' top' : ''}" id="tvapps">${list.map(btn).join('')}</div>` : '';
     return `<div class="np" id="np" hidden>
         <div class="art" id="np-art"><ha-icon icon="mdi:movie-open"></ha-icon></div>
         <div class="meta"><b id="np-title"></b><span id="np-sub"></span><div class="prog"><i id="np-prog"></i></div></div>
@@ -474,7 +497,7 @@ ${top ? apps : ''}
   }
 
   _appIcon(n = '') {
-    const m = [[/youtube/i, 'mdi:youtube'], [/netflix/i, 'mdi:netflix'], [/dstv|showmax/i, 'mdi:satellite-uplink'], [/prime|amazon/i, 'mdi:filmstrip-box'],
+    const m = [[/youtube/i, 'mdi:youtube'], [/netflix/i, 'mdi:netflix'], [/dstv|showmax/i, 'mdi:satellite-uplink'], [/prime|amazon/i, 'mdi:play-box-multiple'],
       [/disney/i, 'mdi:castle'], [/spotify/i, 'mdi:spotify'], [/music/i, 'mdi:music'], [/plex/i, 'mdi:plex'], [/twitch/i, 'mdi:twitch']].find(([r]) => r.test(n));
     return m ? m[1] : 'mdi:application';
   }
@@ -888,7 +911,7 @@ ${top ? apps : ''}
         if (s.state === 'playing') chips.push(`<button class="chip tv" data-act="go" data-k="apple_tv" style="color:var(--violet)"><span class="dot"></span><span style="color:var(--ink-2)">${esc(a.app_name || 'Apple TV')} playing</span></button>`);
       }
       const cur = (a.app_name || a.source || '').toLowerCase();
-      r.querySelectorAll('#tvapps .src').forEach((b, i) => {
+      r.querySelectorAll('#tvapps [data-act="app"]').forEach((b, i) => {
         const app = t.apps[i];
         const n = (app.source || app.name || '').toLowerCase();
         b.classList.toggle('sel', !!cur && !!n && s?.state !== 'off' && (cur === n || cur.includes(n) || n.includes(cur)));
