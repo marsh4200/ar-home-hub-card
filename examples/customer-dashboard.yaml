@@ -1,0 +1,123 @@
+# AR Home Hub — customer dashboard view
+# Paste this as a new view: Dashboard > ⋮ > Edit > ⋮ > Raw configuration editor,
+# and add it under "views:" (or replace the Home view's sections with the card below).
+
+- title: Home
+  path: hub
+  type: panel
+  theme: Frosted Glass Light
+  cards:
+    - type: custom:ar-home-hub-card
+      max_width: 560px
+      subtitle: A R Smart Home Automation
+      default_open: lights
+
+      scenes:
+        - entity: script.good_night
+          name: Good night
+          label: Staged lights off
+          icon: mdi:weather-night
+          style: night
+        - entity: script.good_morning
+          name: Good morning
+          label: Lights on
+          icon: mdi:weather-sunny
+          style: morning
+        - entity: script.goodbye
+          name: Goodbye
+          label: Everything off
+          icon: mdi:exit-run
+          style: away
+
+      lights:
+        - entity: switch.hdl_200_21_ent_ch1
+          room: Dining
+          name: Dining
+          icon: mdi:silverware-fork-knife
+        - entity: switch.hdl_200_23_patio_ch2
+          room: Lounge
+          name: Lounge
+          icon: mdi:lightbulb-spot
+        - entity: switch.hdl_200_12_ch1
+          room: Lounge
+          name: Lamp
+          icon: mdi:floor-lamp
+        - entity: switch.hdl_200_21_ent_ch3
+          room: Kitchen
+          name: Kitchen
+          icon: mdi:stove
+        - entity: switch.hdl_200_23_patio_ch3
+          room: Patio
+          name: Patio
+          icon: mdi:outdoor-lamp
+        - entity: switch.hdl_200_24_mbed_ch2
+          room: Main bed
+          name: Lights
+          icon: mdi:bed-king
+        - entity: switch.hdl_200_26_ch2
+          room: Bedroom 1
+          name: Lights
+          icon: mdi:bed
+        - entity: switch.hdl_200_22_bathroom_ch1
+          room: Bathroom
+          name: Lights
+          icon: mdi:bathtub
+        - entity: switch.hdl_200_21_ent_ch2
+          room: Outside
+          name: Outside
+          icon: mdi:coach-lamp
+
+      climate:
+        temperature: sensor.snzb_02d_sonoff_a480150b1e_temperature
+        temperature_name: Lounge temp
+        humidity: sensor.snzb_02d_sonoff_a480150b1e_humidity
+        humidity_name: Humidity
+
+      motion:
+        - entity: binary_sensor.dining_motion_sensor_sonoff_a480150fd6
+          name: Dining
+        - entity: binary_sensor.lounge_motion_sensor_sonoff_a480150fd2
+          name: Lounge
+
+      camera:
+        name: CCTV
+        card:
+          type: custom:webrtc-camera
+          # Recommended: add the stream to /config/go2rtc.yaml once:
+          #   streams:
+          #     front_cam: rtsp://USER:PASS@192.168.0.247/live0
+          # and refer to it by name here, so the password isn't in the dashboard.
+          # To test straight away you can paste the old rtsp:// URL here instead.
+          url: front_cam
+          muted: true
+
+      apple_tv:
+        name: Apple TV
+        room: Living room
+        entity: media_player.living_room_living_room_2
+        card:
+          type: custom:firemote-card
+          entity: media_player.living_room_living_room_2
+          device_family: apple-tv
+          device_type: appletv-4k-gen3
+          compatibility_mode: default
+          apple_tv_remote_entity: remote.living_room_living_room
+          scale: '83'
+          app_launch_1: ''
+          name_position: bottom
+
+      geyser:
+        name: Geyser
+        switch: switch.geyser_sonoff_1001db1327_1
+        switch_name: Main geyser
+        power: sensor.geyser_sonoff_1001db1327_power
+        current: sensor.geyser_sonoff_1001db1327_current
+        voltage: sensor.geyser_sonoff_1001db1327_voltage
+        energy_day: sensor.geyser_sonoff_1001db1327_energy_day
+        energy_month: sensor.geyser_sonoff_1001db1327_energy_month
+        load_threshold: 10
+
+      amp:
+        name: Arylic amp
+        entity: media_player.arylic_amp
+        # sources: [Optical, Bluetooth, Line In]   # optional, otherwise read from the amp
