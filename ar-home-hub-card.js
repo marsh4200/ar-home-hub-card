@@ -4,7 +4,7 @@
  * drawers for lights, climate/motion, camera, Apple TV, geyser and amp.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '1.3.0';
+const AR_HUB_VERSION = '1.4.0';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -254,13 +254,14 @@ class ArHomeHubCard extends HTMLElement {
     c.lights = (config.lights || []).map((l) => (typeof l === 'string' ? { entity: l } : l));
     c.motion = (config.motion || []).map((m) => (typeof m === 'string' ? { entity: m } : m));
     c.scenes = (config.scenes || []).map((s) => (typeof s === 'string' ? { entity: s } : s));
+    c.climates = (Array.isArray(config.climate) ? config.climate : config.climate ? [config.climate] : []).filter((x) => x && (x.temperature || x.humidity));
     c.amp = typeof config.amp === 'string' ? { entity: config.amp } : config.amp;
     c.camera = typeof config.camera === 'string' ? { entity: config.camera } : config.camera;
     c.apple_tv = typeof config.apple_tv === 'string' ? { entity: config.apple_tv } : config.apple_tv;
     if (c.geyser && !c.geyser.switch) throw new Error('geyser needs a "switch" entity');
     const has = {
       lights: c.lights.length > 0,
-      climate: !!(c.climate?.temperature || c.climate?.humidity || c.motion.length),
+      climate: !!(c.climates.length || c.motion.length),
       camera: !!(c.camera?.card || c.camera?.entity),
       apple_tv: !!(c.apple_tv?.card || c.apple_tv?.entity),
       geyser: !!c.geyser?.switch,
@@ -329,7 +330,7 @@ class ArHomeHubCard extends HTMLElement {
     c.lights.forEach((l) => e.add(l.entity));
     c.motion.forEach((m) => e.add(m.entity));
     c.scenes.forEach((s) => e.add(s.entity));
-    if (c.climate) ['temperature', 'humidity'].forEach((k) => c.climate[k] && e.add(c.climate[k]));
+    c.climates.forEach((cl) => ['temperature', 'humidity'].forEach((k) => cl[k] && e.add(cl[k])));
     if (c.geyser) ['switch', 'power', 'current', 'voltage', 'energy_day', 'energy_month'].forEach((k) => c.geyser[k] && e.add(c.geyser[k]));
     if (c.amp?.entity) e.add(c.amp.entity);
     if (c.apple_tv?.entity) e.add(c.apple_tv.entity);
@@ -446,7 +447,7 @@ class ArHomeHubCard extends HTMLElement {
 
   _body_climate() {
     const c = this._config;
-    const cl = c.climate || {};
+    const multi = c.climates.length > 1;
     const gauge = (key, ent, label, icon, color, stroke) => `<button class="gauge" data-act="more" data-e="${esc(ent)}">
         <span class="ring"><svg viewBox="0 0 64 64" aria-hidden="true">
           <defs><linearGradient id="g-${key}"><stop offset="0" stop-color="${stroke[0]}"/><stop offset="1" stop-color="${stroke[1]}"/></linearGradient></defs>
@@ -456,8 +457,15 @@ class ArHomeHubCard extends HTMLElement {
           <ha-icon icon="${icon}" style="color:${color}"></ha-icon></span>
         <div><div class="gl">${esc(label)}</div><div class="gv" id="gv-${key}">–</div></div></button>`;
     return `<div class="clim">
-      ${cl.temperature ? gauge('temp', cl.temperature, cl.temperature_name || 'Temperature', 'mdi:thermometer', 'var(--ember)', ['#ffc35a', '#ff6a3d']) : ''}
-      ${cl.humidity ? gauge('hum', cl.humidity, cl.humidity_name || 'Humidity', 'mdi:water-percent', 'var(--cyan)', ['#5fd4ff', '#5fd4ff']) : ''}
+      ${c.climates
+        .map((cl, i) => {
+          const room = cl.name || '';
+          const tl = cl.temperature_name || (multi && room ? room : 'Temperature');
+          const hl = cl.humidity_name || (multi && room ? room : 'Humidity');
+          return `${cl.temperature ? gauge('temp-' + i, cl.temperature, tl, 'mdi:thermometer', 'var(--ember)', ['#ffc35a', '#ff6a3d']) : ''}
+            ${cl.humidity ? gauge('hum-' + i, cl.humidity, hl, 'mdi:water-percent', 'var(--cyan)', ['#5fd4ff', '#5fd4ff']) : ''}`;
+        })
+        .join('')}
       ${c.motion.length ? `<div class="mot">${c.motion
         .map(
           (m, i) => `<button class="mrow" data-act="more" data-e="${esc(m.entity)}" id="mo-${i}">
@@ -843,30 +851,34 @@ ${top ? apps : ''}
     r.querySelectorAll('.scene').forEach((b, i) => b.classList.toggle('running', this._st(c.scenes[i].entity)?.state === 'on'));
 
     /* climate */
-    const cl = c.climate || {};
     const sumC = [];
-    if (cl.temperature) {
-      const s = this._st(cl.temperature);
-      const t = num(s?.state);
-      const u = s?.attributes.unit_of_measurement || '°C';
-      if ($('gv-temp')) $('gv-temp').innerHTML = t == null ? '–' : `${t.toFixed(1)}<small>${esc(u)}</small>`;
-      const lo = cl.temperature_min ?? 0;
-      const hi = cl.temperature_max ?? 40;
-      if ($('arc-temp')) $('arc-temp').setAttribute('stroke-dashoffset', RING * (1 - (t == null ? 0 : clamp((t - lo) / (hi - lo), 0, 1))));
-      if (t != null) {
-        sumC.push(`${t.toFixed(1)}${u}`);
-        chips.push(`<button class="chip" data-act="go" data-k="climate"><ha-icon icon="mdi:thermometer" style="color:var(--ember)"></ha-icon><b>${t.toFixed(1)}°</b></button>`);
+    const multiC = c.climates.length > 1;
+    c.climates.forEach((cl, i) => {
+      const parts = [];
+      if (cl.temperature) {
+        const st = this._st(cl.temperature);
+        const t = num(st?.state);
+        const u = st?.attributes.unit_of_measurement || '°C';
+        if ($('gv-temp-' + i)) $('gv-temp-' + i).innerHTML = t == null ? '–' : `${t.toFixed(1)}<small>${esc(u)}</small>`;
+        const lo = cl.temperature_min ?? 0;
+        const hi = cl.temperature_max ?? 40;
+        if ($('arc-temp-' + i)) $('arc-temp-' + i).setAttribute('stroke-dashoffset', RING * (1 - (t == null ? 0 : clamp((t - lo) / (hi - lo), 0, 1))));
+        if (t != null) {
+          parts.push(multiC ? `${t.toFixed(1)}°` : `${t.toFixed(1)}${u}`);
+          if (i === 0) chips.push(`<button class="chip" data-act="go" data-k="climate"><ha-icon icon="mdi:thermometer" style="color:var(--ember)"></ha-icon><b>${t.toFixed(1)}°</b></button>`);
+        }
       }
-    }
-    if (cl.humidity) {
-      const hm = num(this._st(cl.humidity)?.state);
-      if ($('gv-hum')) $('gv-hum').innerHTML = hm == null ? '–' : `${Math.round(hm)}<small>%</small>`;
-      if ($('arc-hum')) $('arc-hum').setAttribute('stroke-dashoffset', RING * (1 - (hm == null ? 0 : clamp(hm / 100, 0, 1))));
-      if (hm != null) {
-        sumC.push(`${Math.round(hm)}%`);
-        chips.push(`<button class="chip" data-act="go" data-k="climate"><ha-icon icon="mdi:water-percent" style="color:var(--cyan)"></ha-icon><b>${Math.round(hm)}%</b></button>`);
+      if (cl.humidity) {
+        const hm = num(this._st(cl.humidity)?.state);
+        if ($('gv-hum-' + i)) $('gv-hum-' + i).innerHTML = hm == null ? '–' : `${Math.round(hm)}<small>%</small>`;
+        if ($('arc-hum-' + i)) $('arc-hum-' + i).setAttribute('stroke-dashoffset', RING * (1 - (hm == null ? 0 : clamp(hm / 100, 0, 1))));
+        if (hm != null) {
+          parts.push(`${Math.round(hm)}%`);
+          if (i === 0) chips.push(`<button class="chip" data-act="go" data-k="climate"><ha-icon icon="mdi:water-percent" style="color:var(--cyan)"></ha-icon><b>${Math.round(hm)}%</b></button>`);
+        }
       }
-    }
+      if (parts.length) sumC.push(multiC && cl.name ? `${cl.name} ${parts.join(' ')}` : parts.join(' · '));
+    });
     const active = [];
     c.motion.forEach((m, i) => {
       const s = this._st(m.entity);
