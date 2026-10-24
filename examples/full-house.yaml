@@ -7,11 +7,28 @@ max_width: 560px
 subtitle: A R Smart Home Automation
 
 # Who's home strip under the greeting (Settings → People in Home Assistant)
-presence:
-  - person.marsh
-  - person.lerato
-  - person.thabo
-  - person.gran
+presence:                     # photo by default; or pick a cartoon character per person
+  - entity: person.marsh
+    character: beard            # beard, glasses, ponytail, long, afro, cap, kid, pigtails, gran, grandpa, dog, cat
+    skin: 2                     # 1 light … 5 dark
+    shirt: teal                 # palette name or #hex
+  - entity: person.lerato
+    character: long
+    skin: 4
+    shirt: violet
+  - entity: person.thabo
+    character: kid
+    skin: 4
+    shirt: amber
+  - entity: person.gran
+    character: gran
+    skin: 3
+    shirt: rose
+
+# Characters fall asleep at home from 22:00 to 06:00. Change the times, or use a switch / the alarm's Night mode:
+# sleep_after: '22:30'
+# sleep_until: '06:00'
+# sleep_entity: alarm_control_panel.home
 
 # Hide chips you don't want at the top (see README for the full list)
 hide_chips:
@@ -157,6 +174,7 @@ sections:
 
   - type: presence
     name: Who's home
+    style: house                  # house scene; leave out for cards
     entities:
       - person.marsh
       - person.lerato

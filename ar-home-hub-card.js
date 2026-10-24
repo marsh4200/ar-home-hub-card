@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.0.4';
+const AR_HUB_VERSION = '2.1.0';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -513,6 +513,78 @@ button:focus-visible,[role="slider"]:focus-visible{outline:2px solid var(--cyan)
 .net span{font-size:12px;color:var(--ink-2)}
 .empty{padding:26px 22px;text-align:center;color:var(--ink-2);font-size:13px}
 .err{color:var(--red);font-size:12.5px}
+.av.chav{background:none}
+.av .avc{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#2a3550,#161c2a)}
+.av .avc svg{width:100%;height:100%;display:block}
+.pp .av.chav{width:38px;height:38px}
+.pc .av.chav{width:60px;height:60px}
+.pc .av.chav .avc{border-radius:18px}
+.pc .av.chav::after{right:-2px;bottom:-2px}
+.pc .stt{display:flex;align-items:center;gap:4px}
+.pc .stt ha-icon{--mdc-icon-size:15px}
+/* characters */
+.ch .bob{animation:bob 3.2s ease-in-out infinite;transform-origin:50px 100px}
+@keyframes bob{50%{transform:translateY(-1.8px)}}
+.ch .eye{animation:blink 5s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+.ch .pupil{transition:transform .6s}
+.ch.away .pupil{transform:translateX(1.6px)}
+.ch .wave{transform-origin:74px 96px;animation:wave 8s ease-in-out infinite;opacity:0}
+@keyframes wave{0%,70%{opacity:0;transform:rotate(0)}73%{opacity:1;transform:rotate(-18deg)}79%{transform:rotate(14deg)}85%{transform:rotate(-18deg)}91%{opacity:1;transform:rotate(10deg)}95%,100%{opacity:0;transform:rotate(0)}}
+.ch.away .wave,.ch.asleep .wave{display:none}
+.ch .tongue{animation:pant .5s ease-in-out infinite;transform-box:fill-box;transform-origin:top}
+@keyframes pant{50%{transform:scaleY(1.25)}}
+.ch.away .tongue{display:none}
+.ch .tail{transform-origin:20px 90px;animation:wag .45s ease-in-out infinite alternate}
+@keyframes wag{to{transform:rotate(-14deg)}}
+.ch.away{filter:grayscale(.55) brightness(.85)}
+.ch .zz{opacity:0}
+.ch.asleep .zz{opacity:1}
+.ch.asleep .zz text{animation:zz 2.4s ease-in infinite}
+.ch.asleep .zz text:nth-child(2){animation-delay:.8s}
+@keyframes zz{0%{opacity:0;transform:translate(0,0)}30%{opacity:1}100%{opacity:0;transform:translate(6px,-14px)}}
+.ch.asleep .bob{animation-duration:5s}
+.ch.walk .bob{animation:hop .32s ease-in-out infinite}
+@keyframes hop{50%{transform:translateY(-4px) rotate(2deg)}}
+/* house scene */
+.hs{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line);aspect-ratio:16/9.2;max-width:100%;transition:background 1s}
+.hs.day{background:linear-gradient(180deg,#6fb8ff 0%,#a7d8ff 55%,#cfeaff 70%)}
+.hs.night{background:linear-gradient(180deg,#0b1430 0%,#1a2650 60%,#26335f 72%)}
+.hs-sky{position:absolute;inset:0;pointer-events:none}
+.hs-sun{position:absolute;right:9%;top:9%;width:13%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff6c9,#ffd45a 60%,#ffb02e);box-shadow:0 0 40px rgba(255,210,90,.8)}
+.hs-moon{position:absolute;right:10%;top:10%;width:9%;aspect-ratio:1;border-radius:50%;background:#f3f0dc;box-shadow:0 0 30px rgba(243,240,220,.5),inset -6px -3px 0 #d9d5b8}
+.hs.night .hs-sun,.hs.day .hs-moon,.hs.day .hs-star{display:none}
+.hs-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:tw 3s ease-in-out infinite}
+@keyframes tw{50%{opacity:.25}}
+.hs-cloud{position:absolute;height:9%;aspect-ratio:3.2;border-radius:99px;background:rgba(255,255,255,.85);animation:drift 50s linear infinite}
+.hs-cloud::before{content:"";position:absolute;left:22%;bottom:40%;width:45%;aspect-ratio:1;border-radius:50%;background:inherit}
+.hs.night .hs-cloud{background:rgba(160,175,220,.18)}
+@keyframes drift{from{transform:translateX(-150%)}to{transform:translateX(900%)}}
+.hs-ground{position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(180deg,#58b05a,#3d8a45)}
+.hs.night .hs-ground{background:linear-gradient(180deg,#22462b,#183420)}
+.hs-road{position:absolute;right:0;bottom:7%;height:9%;width:44%;background:#4a4f5a;border-radius:6px 0 0 6px}
+.hs-road::after{content:"";position:absolute;left:4%;right:0;top:45%;height:8%;background:repeating-linear-gradient(90deg,#f2f2f2 0 18px,transparent 18px 34px)}
+.hs.night .hs-road{background:#2b2f38}
+.hs-house{position:absolute;left:4%;bottom:15%;width:52%}
+.hs-house>svg{width:100%;display:block;overflow:visible}
+.hs-win{transition:fill 1s}
+.hs.night .hs-win{fill:#ffd36b;filter:drop-shadow(0 0 6px rgba(255,200,90,.9))}
+.hs.day .hs-win{fill:#bfe3ff}
+.hs-smoke circle{animation:smoke 4s ease-out infinite;opacity:0}
+.hs-smoke circle:nth-child(2){animation-delay:1.3s}.hs-smoke circle:nth-child(3){animation-delay:2.6s}
+@keyframes smoke{0%{opacity:.7;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(8px,-34px) scale(1.6)}}
+.hs-tag{position:absolute;top:5%;font:600 10.5px var(--fm);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.9);background:rgba(0,0,0,.25);padding:3px 8px;border-radius:99px}
+.hs-actor{position:absolute;bottom:9%;width:15%;transform:translateX(-50%);transition:left 1.6s cubic-bezier(.45,.05,.3,1),bottom 1.6s;display:flex;flex-direction:column;align-items:center;cursor:pointer;appearance:none;background:none;border:0;padding:0;color:#fff}
+.hs-fig{width:100%;display:block}
+.hs-fig>svg{width:100%;display:block;filter:drop-shadow(0 4px 4px rgba(0,0,0,.35))}
+.hs-fig .av.hs-photo{width:100%;height:auto;aspect-ratio:1;font-size:16px;border:3px solid #fff;box-shadow:0 4px 8px rgba(0,0,0,.35)}
+.hs-fig .av.hs-photo::after{display:none}
+.hs-fig .av.away{filter:grayscale(.7)}
+.hs-lbl{max-width:170%;overflow:hidden;text-overflow:ellipsis;margin-top:-4px;font-size:10.5px;font-weight:700;background:rgba(10,14,22,.8);border:1px solid rgba(255,255,255,.15);padding:2px 7px;border-radius:99px;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.hs-lbl ha-icon{--mdc-icon-size:12px}
+.hs-actor.away .hs-lbl{color:#d9d3ff}
+.hs-hi{position:absolute;top:-12%;right:-6%;background:#fff;color:#111;font-size:10px;font-weight:700;border-radius:10px;padding:2px 6px;opacity:0;transform:scale(.6);transition:all .3s}
+.hs-actor.hello .hs-hi{opacity:1;transform:scale(1)}
 @container (max-width:460px){
   .lgrid,.cgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .gey{grid-template-columns:96px minmax(0,1fr)}
@@ -724,11 +796,28 @@ const haversine = (a, b) => {
 const initials = (n = '') => n.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 const AV_GRADS = ['linear-gradient(135deg,#ffc35a,#ff6a3d)', 'linear-gradient(135deg,#9b8cff,#ff8fbf)', 'linear-gradient(135deg,#5fd4ff,#3ee0b4)', 'linear-gradient(135deg,#b8e86b,#3ee0b4)', 'linear-gradient(135deg,#ff8fbf,#ff5d6c)', 'linear-gradient(135deg,#7fa6ff,#9b8cff)'];
 const avGrad = (id) => AV_GRADS[[...String(id)].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AV_GRADS.length];
-const avatarHtml = (c, it, extra = '') => {
+const avatarHtml = (c, it, extra = '', id = '') => {
+  const ch = charOf(c, it);
+  if (ch) {
+    const home = c.st(it.entity)?.state === 'home';
+    const asleep = isAsleep(c, home);
+    return `<span class="av chav${extra}"${id ? ` id="${id}"` : ''} data-k="${home}|${asleep}"><span class="avc">${characterSvg(ch, home ? 'home' : 'away', { asleep })}</span></span>`;
+  }
   const s = c.st(it.entity);
   const pic = it.picture || s?.attributes.entity_picture;
   const nm = c.nm(it);
-  return `<span class="av${extra}" style="--g:${avGrad(it.entity)}">${pic ? `<img alt="" src="${esc(c.url(pic))}">` : esc(initials(nm))}</span>`;
+  return `<span class="av${extra}"${id ? ` id="${id}"` : ''} style="--g:${avGrad(it.entity)}">${pic ? `<img alt="" src="${esc(c.url(pic))}">` : esc(initials(nm))}</span>`;
+};
+/* redraw a character avatar when the person comes or goes, or falls asleep */
+const refreshAvatar = (c, it, el) => {
+  if (!el || !el.classList.contains('chav')) return;
+  const ch = charOf(c, it);
+  const home = c.st(it.entity)?.state === 'home';
+  const asleep = isAsleep(c, home);
+  const k = `${home}|${asleep}`;
+  if (el.dataset.k === k) return;
+  el.dataset.k = k;
+  el.firstElementChild.innerHTML = characterSvg(ch, home ? 'home' : 'away', { asleep });
 };
 const presenceState = (s) => {
   if (!s || ['unavailable', 'unknown'].includes(s.state)) return ['away', 'Unknown'];
@@ -760,6 +849,156 @@ const timeStr = (iso) => {
   if (isNaN(d)) return String(iso);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
+
+/* ======================================================================
+ * Cartoon characters for people (original designs)
+ * ====================================================================== */
+const SKIN = ['#f6d2b8', '#e9b48f', '#c68a5e', '#8d5a3b', '#5a3a26'];
+const SHIRTS = ['#3ee0b4', '#5fd4ff', '#9b8cff', '#ff8fbf', '#ffc35a', '#ff6a3d', '#e7ecf5', '#2f3a52'];
+const CHARACTERS = {
+  beard: { label: 'Beard', hair: 'short', hairColor: '#2b1d14', beard: true },
+  glasses: { label: 'Glasses', hair: 'curly', hairColor: '#3b2416', glasses: true },
+  ponytail: { label: 'Ponytail', hair: 'ponytail', hairColor: '#5a3418' },
+  long: { label: 'Long hair', hair: 'long', hairColor: '#1d1410' },
+  afro: { label: 'Afro', hair: 'afro', hairColor: '#17110d' },
+  cap: { label: 'Cap', hair: 'cap', hairColor: '#2b1d14' },
+  kid: { label: 'Kid', hair: 'spiky', hairColor: '#6b4220', kid: true },
+  pigtails: { label: 'Pigtails', hair: 'pigtails', hairColor: '#8a4b1f', kid: true },
+  gran: { label: 'Gran', hair: 'bun', hairColor: '#cfd3dc', glasses: true },
+  grandpa: { label: 'Grandpa', hair: 'bald', hairColor: '#cfd3dc', moustache: true },
+  dog: { label: 'Dog', kind: 'dog' },
+  cat: { label: 'Cat', kind: 'cat' },
+};
+let CH_SEQ = 0;
+const ZZ = `<g class="zz" font-family="Sora,sans-serif" font-weight="700" fill="#cfd8ff"><text x="70" y="26" font-size="10">z</text><text x="78" y="18" font-size="8">z</text></g>`;
+const shirtOf = (v) => (v ? PALETTE[v] || v : SHIRTS[0]);
+/* o: { character, skin (1-5), shirt, hair_color }  state: 'home' | 'away'  flags: { asleep, walk } */
+function characterSvg(o, state, flags = {}) {
+  const base = CHARACTERS[o.character] || CHARACTERS.beard;
+  const p = { ...base, ...(o.hair_color ? { hairColor: o.hair_color } : {}) };
+  const cls = `ch ${state === 'home' ? 'home' : 'away'}${flags.asleep ? ' asleep' : ''}${flags.walk ? ' walk' : ''}`;
+  const delay = ((CH_SEQ++ % 6) * 1.3).toFixed(1);
+  const shirt = shirtOf(o.shirt);
+  const closed = (y) => `<path d="M38 ${y} Q42 ${y + 3} 46 ${y} M54 ${y} Q58 ${y + 3} 62 ${y}" stroke="#1b1b26" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  if (p.kind === 'dog') {
+    const c = o.hair_color || '#b7793f';
+    return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><g class="bob">
+      <path class="tail" d="M20 90 Q8 76 14 64" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M20 104 C22 82 34 74 50 74 C66 74 78 82 80 104Z" fill="${c}"/>
+      <path d="M40 76 Q50 82 60 76 L60 80 Q50 86 40 80Z" fill="${shirt}"/><circle cx="50" cy="84" r="3" fill="#ffd45a"/>
+      <ellipse cx="50" cy="48" rx="22" ry="21" fill="${c}"/>
+      <path d="M30 34 C18 36 16 58 24 64 C30 60 33 48 34 40Z" fill="#7c4a22"/><path d="M70 34 C82 36 84 58 76 64 C70 60 67 48 66 40Z" fill="#7c4a22"/>
+      <ellipse cx="50" cy="58" rx="13" ry="10" fill="#f1dcc0"/>
+      ${flags.asleep ? closed(46) : `<g class="eye"><circle cx="42" cy="46" r="3.6" fill="#1b1b26"/><circle cx="43" cy="45" r="1" fill="#fff"/></g><g class="eye"><circle cx="58" cy="46" r="3.6" fill="#1b1b26"/><circle cx="59" cy="45" r="1" fill="#fff"/></g>`}
+      <ellipse cx="50" cy="53" rx="4.5" ry="3.4" fill="#1b1b26"/>
+      <path d="M50 56 L50 60 M44 61 Q50 64 56 61" stroke="#1b1b26" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      ${flags.asleep ? '' : '<path class="tongue" d="M47 62 Q50 70 53 62Z" fill="#ff7a8a"/>'}</g>${ZZ}</svg>`;
+  }
+  if (p.kind === 'cat') {
+    const c = o.hair_color || '#8b93a6';
+    return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><g class="bob">
+      <path class="tail" d="M22 96 Q6 84 14 66 Q18 60 22 64" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M22 104 C24 82 35 74 50 74 C65 74 76 82 78 104Z" fill="${c}"/>
+      <path d="M30 40 L28 16 L44 30Z M70 40 L72 16 L56 30Z" fill="${c}"/><path d="M32 34 L31 21 L40 30Z M68 34 L69 21 L60 30Z" fill="#ffb3c0"/>
+      <ellipse cx="50" cy="48" rx="22" ry="20" fill="${c}"/>
+      <path d="M40 30 L42 36 M50 28 L50 35 M60 30 L58 36" stroke="rgba(0,0,0,.25)" stroke-width="2" stroke-linecap="round"/>
+      ${flags.asleep ? closed(47) : `<g class="eye"><ellipse cx="42" cy="47" rx="3.8" ry="4.6" fill="#c8f06a"/><ellipse class="pupil" cx="42" cy="47" rx="1.3" ry="3.6" fill="#1b1b26"/></g><g class="eye"><ellipse cx="58" cy="47" rx="3.8" ry="4.6" fill="#c8f06a"/><ellipse class="pupil" cx="58" cy="47" rx="1.3" ry="3.6" fill="#1b1b26"/></g>`}
+      <path d="M47.5 54 L52.5 54 L50 57Z" fill="#ff8fa3"/>
+      <path d="M50 57 Q47 61 44 59 M50 57 Q53 61 56 59" stroke="#1b1b26" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      <path d="M30 54 L40 55 M30 59 L40 57 M70 54 L60 55 M70 59 L60 57" stroke="#e8ecf4" stroke-width="1" stroke-linecap="round"/></g>${ZZ}</svg>`;
+  }
+  const skin = SKIN[clamp((+o.skin || 2) - 1, 0, 4)];
+  const hc = p.hairColor;
+  const s = p.kid ? 0.9 : 1;
+  const back = {
+    long: `<path d="M27 44 C25 21 38 15 50 15 C63 15 76 22 73 44 L76 80 C66 84 34 84 24 80Z" fill="${hc}"/>`,
+    ponytail: `<ellipse cx="76" cy="44" rx="7" ry="15" fill="${hc}" transform="rotate(18 76 44)"/>`,
+    afro: `<g fill="${hc}"><circle cx="50" cy="36" r="26"/><circle cx="29" cy="44" r="10"/><circle cx="71" cy="44" r="10"/><circle cx="34" cy="22" r="11"/><circle cx="66" cy="22" r="11"/><circle cx="50" cy="15" r="11"/></g>`,
+    pigtails: `<g fill="${hc}"><circle cx="24" cy="47" r="8"/><circle cx="76" cy="47" r="8"/></g><g fill="${shirt}"><circle cx="29" cy="43" r="2.6"/><circle cx="71" cy="43" r="2.6"/></g>`,
+    bun: `<circle cx="50" cy="17" r="8.5" fill="${hc}"/>`,
+  }[p.hair] || '';
+  const front = {
+    short: `<path d="M29 44 C27 26 38 19 50 19 C63 19 74 27 71 44 C68 34 62 30 55 31 C48 32 40 30 35 34 C32 36 30 40 29 44Z" fill="${hc}"/>`,
+    curly: `<g fill="${hc}"><circle cx="32" cy="36" r="6"/><circle cx="37" cy="28" r="6.5"/><circle cx="45" cy="23" r="7"/><circle cx="55" cy="23" r="7"/><circle cx="63" cy="28" r="6.5"/><circle cx="68" cy="36" r="6"/><circle cx="30" cy="44" r="4.5"/><circle cx="70" cy="44" r="4.5"/></g>`,
+    long: `<path d="M29 47 C27 25 39 19 51 19 C64 19 74 27 71 47 C69 33 60 28 50 30 C42 31 34 36 29 47Z" fill="${hc}"/>`,
+    ponytail: `<path d="M29 44 C27 25 39 19 51 19 C64 19 74 27 71 44 C68 31 58 27 48 29 C40 30 33 35 29 44Z" fill="${hc}"/>`,
+    afro: `<path d="M31 38 C36 30 64 30 69 38 C64 35 36 35 31 38Z" fill="${hc}"/>`,
+    spiky: `<path d="M29 42 L31 26 L37 31 L41 19 L46 28 L51 16 L55 28 L61 19 L63 30 L70 25 L71 42 C64 32 36 32 29 42Z" fill="${hc}"/>`,
+    pigtails: `<path d="M29 42 C28 25 39 20 50 20 C61 20 72 25 71 42 C66 33 58 31 50 33 C42 31 34 33 29 42Z" fill="${hc}"/>`,
+    bun: `<path d="M29 44 C27 27 38 21 50 21 C62 21 73 27 71 44 C67 33 60 30 50 30 C40 30 33 33 29 44Z" fill="${hc}"/>`,
+    bald: `<g fill="${hc}"><path d="M28 46 C28 38 30 34 33 32 C31 38 31 42 31 47Z"/><path d="M72 46 C72 38 70 34 67 32 C69 38 69 42 69 47Z"/></g>`,
+    cap: `<g><path d="M28 40 C28 20 72 20 72 40 Z" fill="${shirt}"/><path d="M48 37 L84 37 C82 42 62 43 48 41Z" fill="${shirt}" opacity=".85"/><path d="M28 40 C28 20 72 20 72 40" fill="none" stroke="rgba(0,0,0,.2)"/><circle cx="50" cy="22" r="2" fill="rgba(0,0,0,.25)"/></g>`,
+  }[p.hair] || '';
+  const eyes = flags.asleep
+    ? closed(48)
+    : `<g class="eye"><ellipse cx="42" cy="47" rx="4.2" ry="4.8" fill="#fff"/><g class="pupil"><circle cx="42.4" cy="47.6" r="2.5" fill="#1b1b26"/><circle cx="43.3" cy="46.5" r=".8" fill="#fff"/></g></g>
+       <g class="eye"><ellipse cx="58" cy="47" rx="4.2" ry="4.8" fill="#fff"/><g class="pupil"><circle cx="58.4" cy="47.6" r="2.5" fill="#1b1b26"/><circle cx="59.3" cy="46.5" r=".8" fill="#fff"/></g></g>`;
+  const mouth = state === 'home' && !flags.asleep
+    ? `<path d="M43.5 56.5 Q50 63 56.5 56.5 Q50 59 43.5 56.5Z" fill="#7a2c2c"/>`
+    : `<path d="M45 58.5 Q50 60.5 55 58.5" stroke="#5b2a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 100 100" class="${cls}" aria-hidden="true"><g class="bob"><g transform="translate(${50 - 50 * s} ${100 - 100 * s}) scale(${s})">
+    ${back}
+    <path d="M17 104 C19 80 33 72 50 72 C67 72 81 80 83 104Z" fill="${shirt}"/>
+    <path d="M44 72 L50 80 L56 72" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="2"/>
+    <rect x="44" y="60" width="12" height="13" rx="4" fill="${skin}"/>
+    <circle cx="29" cy="48" r="5" fill="${skin}"/><circle cx="71" cy="48" r="5" fill="${skin}"/>
+    <ellipse cx="50" cy="45" rx="21.5" ry="23" fill="${skin}"/>
+    ${p.beard ? `<path d="M29 48 C30 66 40 72 50 72 C60 72 70 66 71 48 C67 59 59 62 50 62 C41 62 33 59 29 48Z" fill="${hc}"/>` : ''}
+    ${front}
+    <path d="M37.5 40.5 Q42 38.5 46 40.5 M54 40.5 Q58 38.5 62.5 40.5" stroke="${p.hair === 'bald' || p.hair === 'bun' ? '#8a8f9a' : hc}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    ${eyes}
+    <circle cx="36.5" cy="54" r="3" fill="#ff8a8a" opacity=".35"/><circle cx="63.5" cy="54" r="3" fill="#ff8a8a" opacity=".35"/>
+    <path d="M50 50 Q52.4 53 50 54.2" stroke="rgba(0,0,0,.28)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    ${p.moustache ? `<path d="M42 56.5 Q50 51.5 58 56.5 Q50 55 42 56.5Z" fill="${hc}"/>` : ''}
+    ${mouth}
+    ${p.glasses ? `<g fill="none" stroke="#1d2230" stroke-width="1.6"><circle cx="42" cy="47" r="6.2"/><circle cx="58" cy="47" r="6.2"/><path d="M48.2 47 L51.8 47 M35.8 46 L30 44.5 M64.2 46 L70 44.5"/></g>` : ''}
+    <g class="wave" style="animation-delay:${delay}s"><path d="M74 96 L80 76" stroke="${shirt}" stroke-width="8" stroke-linecap="round"/><circle cx="81" cy="72" r="5.2" fill="${skin}"/></g>
+  </g></g>${ZZ}</svg>`;
+}
+
+/* asleep = at home and inside the sleep window (or the sleep entity is on / alarm in night mode) */
+function isAsleep(c, home) {
+  if (!home) return false;
+  const sl = c._config.sleep;
+  if (sl === false) return false;
+  const o = sl || {};
+  if (o.entity) return ['on', 'armed_night', 'true'].includes(c.st(o.entity)?.state);
+  const [ah, am] = String(o.after || '22:00').split(':').map(Number);
+  const [uh, um] = String(o.until || '06:00').split(':').map(Number);
+  const d = new Date();
+  const m = d.getHours() * 60 + d.getMinutes();
+  const a = ah * 60 + (am || 0);
+  const u = uh * 60 + (um || 0);
+  return a > u ? m >= a || m < u : m >= a && m < u;
+}
+/* character settings for a person: their own item first, then the same person in the top strip */
+function charOf(c, it) {
+  const top = c._config.presence.find((p) => p.entity === it.entity) || {};
+  const pick = (k) => (it[k] != null && it[k] !== '' ? it[k] : top[k]);
+  const ch = pick('character');
+  return ch && ch !== 'photo' && CHARACTERS[ch] ? { character: ch, skin: pick('skin'), shirt: pick('shirt'), hair_color: pick('hair_color') } : null;
+}
+/* zone icon for "At Work", "At Woolworths" … taken from the zone itself in Home Assistant */
+function zoneIcon(c, state) {
+  if (state === 'home') return 'mdi:home';
+  if (state === 'not_home') return 'mdi:car';
+  const z = Object.values(c._hass?.states || {}).find((s) => s.entity_id.startsWith('zone.') && (s.attributes.friendly_name === state || s.entity_id === 'zone.' + String(state).toLowerCase().replace(/\W+/g, '_')));
+  if (z?.attributes.icon) return z.attributes.icon;
+  if (/work|office/i.test(state)) return 'mdi:briefcase';
+  if (/school|college|uni/i.test(state)) return 'mdi:school';
+  if (/shop|mall|store|market|spar|checkers|woolworths|pick|centre|center/i.test(state)) return 'mdi:cart';
+  if (/gym|fitness/i.test(state)) return 'mdi:dumbbell';
+  return 'mdi:map-marker';
+}
+const HOUSE_SVG = `<svg viewBox="0 0 200 150" aria-hidden="true">
+  <g class="hs-smoke" fill="rgba(230,230,240,.7)"><circle cx="146" cy="22" r="6"/><circle cx="146" cy="22" r="6"/><circle cx="146" cy="22" r="6"/></g>
+  <rect x="140" y="26" width="13" height="28" fill="#8a4a3a"/>
+  <path d="M10 70 L100 8 L190 70Z" fill="#b5503c"/><path d="M10 70 L100 8 L190 70" fill="none" stroke="#7d3426" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="22" y="66" width="156" height="84" fill="#f2e6d0"/><rect x="22" y="66" width="156" height="6" fill="rgba(0,0,0,.08)"/>
+  <rect class="hs-win" x="36" y="82" width="34" height="28" rx="3"/><path d="M53 82 V110 M36 96 H70" stroke="#7a6a55" stroke-width="2.5"/>
+  <rect class="hs-win" x="130" y="82" width="34" height="28" rx="3"/><path d="M147 82 V110 M130 96 H164" stroke="#7a6a55" stroke-width="2.5"/>
+  <rect x="86" y="96" width="28" height="54" rx="3" fill="#6b3f2a"/><circle cx="108" cy="124" r="2" fill="#ffd45a"/>
+  <circle class="hs-win" cx="100" cy="44" r="8"/></svg>`;
 
 /* ======================================================================
  * Section types. Each one knows how to normalise its config, which
@@ -1239,10 +1478,10 @@ def('motion', {
 
 /* ---------------- presence ---------------- */
 def('presence', {
-  title: "Who's home", icon: 'mdi:account-group', color: 'rose', desc: 'Each person: home, away or which zone, since when',
+  title: "Who's home", icon: 'mdi:account-group', color: 'rose', desc: 'Each person: home, away or which zone, since when. Photos or cartoon characters, cards or a house scene',
   norm: (s) => ({ ...s, entities: asItems(s.entities) }),
   has: (s) => s.entities.length > 0,
-  watch: (s) => ids(s.entities, s.entities.map((x) => x.battery)),
+  watch: (s) => ids(s.entities, s.entities.map((x) => x.battery), ['sun.sun', s.sleep_entity].filter(Boolean)),
   battery(c, it) {
     if (it.battery) return it.battery;
     const src = c.st(it.entity)?.attributes.source;
@@ -1250,25 +1489,92 @@ def('presence', {
     const guess = `sensor.${src.split('.')[1]}_battery_level`;
     return c.st(guess) ? guess : null;
   },
-  body: (c, s, p) => `<div class="pgrid">${s.entities
-    .map((x, i) => `<button class="pc" data-act="more" data-e="${esc(x.entity)}" id="${p}p${i}"><div class="top">${avatarHtml(c, x)}<div style="min-width:0"><div class="nm">${esc(c.nm(x))}</div><div class="stt" id="${p}ps${i}"></div></div></div>
-      <div class="meta"><div><ha-icon icon="mdi:clock-outline"></ha-icon><span id="${p}pt${i}"></span></div><div id="${p}pdw${i}"><ha-icon icon="mdi:map-marker-distance"></ha-icon><span id="${p}pd${i}"></span></div></div>
-      <div id="${p}pbw${i}"><div class="meta" style="margin-bottom:5px"><div><ha-icon icon="mdi:cellphone"></ha-icon><span id="${p}pb${i}"></span></div></div><div class="batt"><i id="${p}pbb${i}"></i></div></div></button>`)
-    .join('')}</div>`,
+  where(c, it) {
+    const st = c.st(it.entity);
+    const [cls, word] = presenceState(st);
+    const a = st?.attributes || {};
+    const hz = c.st('zone.home')?.attributes;
+    let dist = null;
+    if (cls !== 'home' && a.latitude != null && hz?.latitude != null) dist = haversine([hz.latitude, hz.longitude], [a.latitude, a.longitude]);
+    const km = dist == null ? null : `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away`;
+    return { cls, word, km, icon: zoneIcon(c, st?.state), short: cls === 'home' ? 'Home' : cls === 'zone' ? st.state : km || 'Away' };
+  },
+  body(c, s, p) {
+    if (s.style === 'house') {
+      const stars = Array.from({ length: 26 }, (_, i) => `<span class="hs-star" style="left:${(i * 37) % 100}%;top:${(i * 23) % 55}%;animation-delay:${(i % 7) * 0.4}s"></span>`).join('');
+      return `<div class="hs" id="${p}hs"><div class="hs-sky">${stars}<div class="hs-sun"></div><div class="hs-moon"></div><div class="hs-cloud" style="top:12%;left:8%"></div><div class="hs-cloud" style="top:24%;left:40%;animation-duration:70s;height:7%"></div></div>
+        <div class="hs-ground"></div><div class="hs-road"></div><div class="hs-house">${HOUSE_SVG}</div><span class="hs-tag" style="left:3%">Home</span><span class="hs-tag" style="right:3%">Out</span>
+        ${s.entities.map((x, i) => `<button class="hs-actor" id="${p}a${i}" data-act="more" data-e="${esc(x.entity)}" aria-label="${esc(c.nm(x))}"><span class="hs-hi">Hi!</span><span class="hs-fig" id="${p}af${i}"></span><span class="hs-lbl" id="${p}al${i}"></span></button>`).join('')}</div>`;
+    }
+    return `<div class="pgrid">${s.entities
+      .map((x, i) => `<button class="pc" data-act="more" data-e="${esc(x.entity)}" id="${p}p${i}"><div class="top">${avatarHtml(c, x, '', p + 'pa' + i)}<div style="min-width:0"><div class="nm">${esc(c.nm(x))}</div><div class="stt"><ha-icon id="${p}pi${i}" icon="mdi:home"></ha-icon><span id="${p}ps${i}"></span></div></div></div>
+        <div class="meta"><div><ha-icon icon="mdi:clock-outline"></ha-icon><span id="${p}pt${i}"></span></div><div id="${p}pdw${i}"><ha-icon icon="mdi:map-marker-distance"></ha-icon><span id="${p}pd${i}"></span></div></div>
+        <div id="${p}pbw${i}"><div class="meta" style="margin-bottom:5px"><div><ha-icon icon="mdi:cellphone"></ha-icon><span id="${p}pb${i}"></span></div></div><div class="batt"><i id="${p}pbb${i}"></i></div></div></button>`)
+      .join('')}</div>`;
+  },
   update(c, s, p) {
     let home = 0;
-    const hz = c.st('zone.home')?.attributes;
+    if (s.style === 'house') {
+      const sun = c.st('sun.sun');
+      const h = new Date().getHours();
+      const night = sun ? sun.state === 'below_horizon' : h < 6 || h >= 18;
+      const sc = c.$(p + 'hs');
+      sc.classList.toggle('night', night);
+      sc.classList.toggle('day', !night);
+      const isHome = (x) => c.st(x.entity)?.state === 'home';
+      const homes = s.entities.filter(isHome);
+      const outs = s.entities.filter((x) => !isHome(x));
+      s.entities.forEach((x, i) => {
+        const hm = isHome(x);
+        if (hm) home++;
+        const list = hm ? homes : outs;
+        const k = list.indexOf(x);
+        const n = list.length;
+        const left = hm ? (n === 1 ? 30 : 9 + (k * 43) / (n - 1)) : n === 1 ? 78 : 64 + (k * 22) / (n - 1);
+        const el = c.$(p + 'a' + i);
+        const moved = el.dataset.home !== undefined && el.dataset.home !== String(hm);
+        if (el.dataset.home === undefined) el.style.transition = 'none';
+        el.dataset.home = hm;
+        el.style.left = left + '%';
+        el.style.bottom = hm ? '9%' : '13%';
+        el.classList.toggle('away', !hm);
+        if (el.style.transition === 'none') requestAnimationFrame(() => (el.style.transition = ''));
+        const ch = charOf(c, x);
+        el.style.width = ch && CHARACTERS[ch.character].kind ? '11%' : '15%';
+        if (moved) {
+          x._walk = Date.now() + 1700;
+          setTimeout(() => {
+            c.update();
+            if (hm) {
+              el.classList.add('hello');
+              setTimeout(() => el.classList.remove('hello'), 1800);
+            }
+          }, 1750);
+        }
+        const walk = (x._walk || 0) > Date.now();
+        const asleep = isAsleep(c, hm);
+        const w = this.where(c, x);
+        c.$(p + 'al' + i).innerHTML = `<ha-icon icon="${esc(w.icon)}"></ha-icon>${esc(c.nm(x))}${hm ? (asleep ? ' · asleep' : '') : ' · ' + esc(w.short)}`;
+        const fig = c.$(p + 'af' + i);
+        const key = `${hm}|${asleep}|${walk}|${ch ? 1 : 0}`;
+        if (fig.dataset.k !== key) {
+          fig.dataset.k = key;
+          fig.innerHTML = ch ? characterSvg(ch, hm ? 'home' : 'away', { asleep, walk }) : avatarHtml(c, x, ' hs-photo' + (hm ? '' : ' away'));
+        }
+      });
+      return { sum: `${home} of ${s.entities.length} home` };
+    }
     s.entities.forEach((x, i) => {
       const st = c.st(x.entity);
-      const [cls, word] = presenceState(st);
-      if (cls === 'home') home++;
-      c.$(p + 'p' + i).className = 'pc ' + cls;
-      c.$(p + 'ps' + i).textContent = word;
+      const w = this.where(c, x);
+      if (w.cls === 'home') home++;
+      c.$(p + 'p' + i).className = 'pc ' + w.cls;
+      refreshAvatar(c, x, c.$(p + 'pa' + i));
+      c.$(p + 'pi' + i).setAttribute('icon', w.icon);
+      c.$(p + 'ps' + i).textContent = w.cls === 'home' && isAsleep(c, true) && charOf(c, x) ? 'Home · asleep' : w.word;
       c.$(p + 'pt' + i).textContent = st ? `Since ${timeStr(st.last_changed)}` : '';
+      c.$(p + 'pd' + i).textContent = w.cls === 'home' ? 'At home' : w.km || 'Away';
       const a = st?.attributes || {};
-      let dist = null;
-      if (cls !== 'home' && a.latitude != null && hz?.latitude != null) dist = haversine([hz.latitude, hz.longitude], [a.latitude, a.longitude]);
-      c.$(p + 'pd' + i).textContent = cls === 'home' ? 'At home' : dist != null ? `${dist < 10 ? dist.toFixed(1) : Math.round(dist)} km away` : 'Away';
       const bid = this.battery(c, x);
       const bv = num(c.st(bid)?.state ?? a.battery_level ?? a.battery);
       c.$(p + 'pbw' + i).hidden = bv == null;
@@ -2185,6 +2491,7 @@ class ArHomeHubCard extends HTMLElement {
     c.scenes = asItems(config.scenes);
     c.presence = asItems(config.presence);
     c.hide = new Set(asList(config.hide_chips));
+    c.sleep = config.sleep === false ? false : { after: config.sleep?.after ?? config.sleep_after, until: config.sleep?.until ?? config.sleep_until, entity: config.sleep?.entity ?? config.sleep_entity };
     this._teardown();
     this._config = c;
     this._built = false;
@@ -2300,6 +2607,8 @@ class ArHomeHubCard extends HTMLElement {
     c.sections.forEach((s) => TYPES[s.type].watch(s).forEach((x) => x && e.add(x)));
     c.scenes.forEach((x) => e.add(x.entity));
     c.presence.forEach((x) => e.add(x.entity));
+    if (c.sleep?.entity) e.add(c.sleep.entity);
+    e.add('sun.sun');
     return [...e];
   }
 
@@ -2353,7 +2662,7 @@ class ArHomeHubCard extends HTMLElement {
       })
       .join('');
     const people = c.presence
-      .map((x, i) => `<button class="pp" data-act="person" data-e="${esc(x.entity)}" id="pp${i}">${avatarHtml(this, x)}<span class="pt"><b>${esc(this.nm(x))}</b><span id="pps${i}"></span></span></button>`)
+      .map((x, i) => `<button class="pp" data-act="person" data-e="${esc(x.entity)}" id="pp${i}">${avatarHtml(this, x, '', 'ppa' + i)}<span class="pt"><b>${esc(this.nm(x))}</b><span id="pps${i}"></span></span></button>`)
       .join('');
     this.shadowRoot.innerHTML = `<style>${STYLE}</style>
       <ha-card style="${c.max_width ? `--hub-max:${esc(c.max_width)}` : ''}">
@@ -2639,7 +2948,8 @@ class ArHomeHubCard extends HTMLElement {
         const el = this.$('pp' + i);
         if (el) {
           el.className = 'pp ' + cls;
-          this.$('pps' + i).textContent = word;
+          this.$('pps' + i).textContent = cls === 'home' && isAsleep(this, true) && charOf(this, x) ? 'Asleep' : word;
+          refreshAvatar(this, x, this.$('ppa' + i));
         }
       });
       const sec = c.sections.find((s) => s.type === 'presence');
@@ -2760,7 +3070,10 @@ const SCHEMA = {
     LF('motion', 'Motion (small rows)', ['binary_sensor'], ['name']),
   ],
   motion: [LF('entities', 'Motion sensors', ['binary_sensor'], ['name', 'icon']), { k: 'history', t: 'bool', l: 'Show the 24-hour activity strip', def: true }],
-  presence: [LF('entities', 'People', ['person', 'device_tracker'], ['name', EF('battery', 'Phone battery (optional)', ['sensor'])])],
+  presence: [
+    { k: 'style', t: 'select', l: 'Look', o: [['', 'Cards'], ['house', 'House scene: people walk between home and out']] },
+    LF('entities', 'People', ['person', 'device_tracker'], ['name', { k: 'character', t: 'character' }, EF('battery', 'Phone battery (optional)', ['sensor'])]),
+  ],
   media: [
     LF('entities', 'TVs and speakers', ['media_player'], ['name', 'room']),
     { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
@@ -2815,7 +3128,10 @@ const CHIP_KEYS = [['people', 'People home'], ['lights', 'Lights on'], ['alarm',
 const HEADER = [
   { k: 'name', t: 'text', l: 'Name in the greeting (blank = logged-in user)' },
   { k: 'subtitle', t: 'text', l: 'Line under the greeting' },
-  { k: 'presence', t: 'people', l: "Who's home strip (people)" },
+  LF('presence', "Who's home strip (people, with photo or cartoon character)", ['person', 'device_tracker'], ['name', { k: 'character', t: 'character' }]),
+  EF('sleep_entity', 'Asleep when this is on (optional: a bedtime switch, or the alarm in Night mode)', ['input_boolean', 'switch', 'binary_sensor', 'alarm_control_panel']),
+  { k: 'sleep_after', t: 'text', l: 'Otherwise asleep from (default 22:00)' },
+  { k: 'sleep_until', t: 'text', l: 'until (default 06:00)' },
   { k: 'hide_chips', t: 'multi', l: 'Hide these chips at the top', o: CHIP_KEYS },
   { k: 'max_width', t: 'text', l: 'Max width (e.g. 560px)' },
 ];
@@ -2856,6 +3172,17 @@ const ED_STYLE = `
 .imgt span{font-size:12px;color:var(--secondary-text-color)}
 .imgb{display:flex;gap:6px;margin-top:4px}
 .pbtn.sm{padding:6px 10px;font-size:12.5px}
+.chf{grid-column:1/-1}
+.chf label{display:block;font-size:12px;color:var(--secondary-text-color);margin:0 0 4px 2px}
+.chg{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:5px}
+.chg button{appearance:none;cursor:pointer;border:2px solid transparent;border-radius:12px;padding:1px;aspect-ratio:1;background:radial-gradient(circle at 50% 35%,#2a3550,#161c2a);display:grid;place-items:center;color:#c8d0e0;font:600 9px sans-serif}
+.chg button svg{width:100%;height:100%;display:block}
+.chg button.sel{border-color:var(--primary-color)}
+.chg .wave,.chg .zz{display:none}
+.chs{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap}
+.chs span{font-size:12px;color:var(--secondary-text-color);min-width:42px}
+.chs button{appearance:none;cursor:pointer;width:22px;height:22px;border-radius:50%;border:2px solid transparent;box-shadow:inset 0 0 0 2px var(--card-background-color,#fff)}
+.chs button.sel{border-color:var(--primary-color)}
 .note{font-size:12.5px;color:var(--secondary-text-color);line-height:1.5;margin:0}
 .banner{border-radius:12px;padding:12px;background:color-mix(in srgb,var(--primary-color) 12%,transparent);display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--secondary-text-color);margin:18px 2px 8px}
@@ -2988,7 +3315,8 @@ class ArHomeHubCardEditor extends HTMLElement {
         });
         return o;
       });
-    ['presence', 'hide_chips'].forEach((k) => blank(out[k]) && delete out[k]);
+    if (Array.isArray(out.presence)) out.presence = out.presence.map(compactItem).filter((x) => !blank(x));
+    ['presence', 'hide_chips', 'sleep_entity', 'sleep_after', 'sleep_until'].forEach((k) => blank(out[k]) && delete out[k]);
     if (Array.isArray(out.scenes)) {
       out.scenes = out.scenes.map(compactItem).filter((x) => !blank(x));
       if (!out.scenes.length) delete out.scenes;
@@ -3021,6 +3349,35 @@ class ArHomeHubCardEditor extends HTMLElement {
       case 'yaml':
         return { object: {} };
     }
+  }
+
+  _charField(obj) {
+    const w = document.createElement('div');
+    w.className = 'chf';
+    const draw = () => {
+      const cur = CHARACTERS[obj.character] ? obj.character : 'photo';
+      const pet = CHARACTERS[cur]?.kind;
+      w.innerHTML = `<label>Picture</label><div class="chg">${['photo', ...Object.keys(CHARACTERS)]
+        .map((k) => `<button type="button" data-ch="${k}" class="${cur === k ? 'sel' : ''}" title="${k === 'photo' ? 'Their Home Assistant photo' : CHARACTERS[k].label}" aria-label="${k === 'photo' ? 'Photo' : CHARACTERS[k].label}">${k === 'photo' ? '<ha-icon icon="mdi:camera-account"></ha-icon><span>Photo</span>' : characterSvg({ character: k, skin: obj.skin, shirt: obj.shirt }, 'home')}</button>`)
+        .join('')}</div>
+        ${cur !== 'photo' && !pet ? `<div class="chs"><span>Skin</span>${SKIN.map((c, i) => `<button type="button" data-sk="${i + 1}" class="${(+obj.skin || 2) === i + 1 ? 'sel' : ''}" style="background:${c}" aria-label="Skin tone ${i + 1}"></button>`).join('')}</div>` : ''}
+        ${cur !== 'photo' ? `<div class="chs"><span>${pet ? 'Collar' : 'Shirt'}</span>${SHIRTS.map((c) => `<button type="button" data-sh="${c}" class="${shirtOf(obj.shirt) === c ? 'sel' : ''}" style="background:${c}" aria-label="Colour ${c}"></button>`).join('')}</div>` : ''}`;
+    };
+    w.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.ch) {
+        if (b.dataset.ch === 'photo') ['character', 'skin', 'shirt'].forEach((k) => delete obj[k]);
+        else obj.character = b.dataset.ch;
+      }
+      if (b.dataset.sk) obj.skin = +b.dataset.sk;
+      if (b.dataset.sh) obj.shirt = b.dataset.sh;
+      draw();
+      this._emit();
+    });
+    draw();
+    return w;
   }
 
   _imageField(obj, f, onChange) {
@@ -3070,6 +3427,7 @@ class ArHomeHubCardEditor extends HTMLElement {
 
   _field(obj, f, onChange) {
     if (f.t === 'image') return this._imageField(obj, f, onChange);
+    if (f.t === 'character') return this._charField(obj);
     const val = obj[f.k] ?? (f.t === 'bool' ? f.def ?? false : f.t === 'multi' || f.t === 'people' ? [] : '');
     const set = (v) => {
       if (f.t === 'people' || f.t === 'multi') v = asList(v);

@@ -42,6 +42,28 @@ Who's home uses Home Assistant **People** (`person.*` entities):
 2. **Settings → Areas & zones → Zones**: add places like *Work* or *School* so the card says “At Work” instead of “Away”.
 3. Put the people under `presence:` for the strip at the top, and/or add a `presence` section for the bigger cards with “since”, distance from home and phone battery.
 
+### Cartoon characters
+
+Instead of a photo, each person can have an animated cartoon character: `beard`, `glasses`, `ponytail`, `long`, `afro`, `cap`, `kid`, `pigtails`, `gran`, `grandpa`, `dog` or `cat`, with `skin` (1 light … 5 dark) and `shirt` (palette name or #hex). They blink and wave when home, turn grey and look away when out, and fall asleep at home between `sleep_after` and `sleep_until` (default 22:00–06:00), or while `sleep_entity` is on (a bedtime switch, or the alarm in Night mode). In the editor, pick them from the picture grid under each person.
+
+```yaml
+presence:
+  - entity: person.marsh
+    character: beard
+    skin: 2
+    shirt: teal
+```
+
+Add `style: house` to a `presence` section for the house scene: people at home stand in front of the house, people who are out stand on the road with where they are, and they walk across when they come and go. The sky follows `sun.sun` (day or night).
+
+### Places: Work, School, the shops
+
+The card shows whatever Home Assistant says the person's location is, so you set places up once as **zones**:
+
+1. **Settings → Areas, labels & zones → Zones → Add zone.** Give it a name (*Work*, *School*, *Woolworths*), an icon (e.g. `mdi:briefcase`, `mdi:school`, `mdi:cart`), drag the pin onto the place and set the radius (100–200 m suits most places).
+2. Each person's phone needs the **Home Assistant Companion app** with location set to **Allow all the time**, and the phone chosen under **Settings → People → Track device**.
+3. When the phone is inside a zone the person shows as **At Work**, **At Woolworths** and so on, with that zone's icon. Outside every zone they show as **Away** with the distance from home.
+
 ## Card options
 
 | Option | Description |
