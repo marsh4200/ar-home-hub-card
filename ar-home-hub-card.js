@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.0.2';
+const AR_HUB_VERSION = '2.0.3';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -2765,7 +2765,7 @@ const SCHEMA = {
     LF('entities', 'TVs and speakers', ['media_player'], ['name', 'room']),
     { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
     { k: 'player', t: 'select', l: 'Layout', o: [['', 'Automatic (remote first when a remote card is set)'], ['compact', 'Remote first: small now-playing strip'], ['full', 'Big player with controls and volume']] },
-    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'text', l: 'Source / app name to open' }, { k: 'image', t: 'image', l: 'Logo' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
+    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'source', l: 'Source / app to open' }, { k: 'image', t: 'image', l: 'Logo' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
     { k: 'apps_style', t: 'select', l: 'App button style', o: [['', 'Logo tiles'], ['chips', 'Text chips']] },
     { k: 'apps_position', t: 'select', l: 'App buttons', o: [['', 'Under the remote'], ['top', 'Above the remote']] },
     { k: 'show_app_names', t: 'bool', l: 'Show names under the logos', def: true },
@@ -3105,6 +3105,14 @@ class ArHomeHubCardEditor extends HTMLElement {
       w.addEventListener('change', () => set([...w.querySelectorAll('input:checked')].map((i) => i.value)));
       return w;
     }
+    if (f.t === 'select' && f.custom) {
+      const id = 'dl-' + Math.random().toString(36).slice(2);
+      w.innerHTML = `<label>${esc(f.l)}</label><input list="${id}" type="text"><datalist id="${id}">${f.o.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</datalist>`;
+      const inp = w.querySelector('input');
+      inp.value = val;
+      inp.addEventListener('change', () => set(inp.value.trim()));
+      return w;
+    }
     if (f.t === 'select') {
       w.innerHTML = `<label>${esc(f.l)}</label><select>${f.o.map(([v, l]) => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
       w.querySelector('select').addEventListener('change', (e) => set(e.target.value));
@@ -3179,7 +3187,18 @@ class ArHomeHubCardEditor extends HTMLElement {
       const fs = document.createElement('div');
       fs.className = 'fs';
       if (!f.noEntity) fs.appendChild(this._field(it, { k: 'entity', t: 'entity', l: 'Entity', d: f.d }));
-      f.f.forEach((sub) => fs.appendChild(this._field(it, sub)));
+      f.f.forEach((sub) => {
+        if (sub.t !== 'source') return fs.appendChild(this._field(it, sub));
+        /* drop-down of the sources Home Assistant reports for this section's TVs; typing still allowed */
+        const found = this._sources(owner);
+        const opts = [...new Set([...(it.source && !found.includes(it.source) ? [it.source] : []), ...found])];
+        fs.appendChild(
+          this._field(it, { ...sub, t: 'select', custom: true, l: found.length ? sub.l : `${sub.l} (TV off: turn it on to list its apps, or type one)`, o: opts.map((x) => [x, x]) }, () => {
+            if (it.source && !it.name) it.name = it.source;
+            this._emit(true);
+          })
+        );
+      });
       const tools = document.createElement('div');
       tools.className = 'tools';
       const move = (d) => {
@@ -3198,6 +3217,17 @@ class ArHomeHubCardEditor extends HTMLElement {
       row.append(fs, tools);
       wrap.appendChild(row);
     });
+    const found = f.f.some((x) => x.t === 'source') ? this._sources(owner).filter((x) => !items.some((it) => it.source === x)) : [];
+    if (found.length) {
+      const all = document.createElement('button');
+      all.className = 'add';
+      all.textContent = `+ Add buttons for all ${found.length} apps and sources the TV reports`;
+      all.addEventListener('click', () => {
+        found.forEach((x) => items.push({ name: x, source: x }));
+        this._emit(true);
+      });
+      wrap.appendChild(all);
+    }
     const add = document.createElement('button');
     add.className = 'add';
     add.textContent = '+ Add';
@@ -3207,6 +3237,15 @@ class ArHomeHubCardEditor extends HTMLElement {
     });
     wrap.appendChild(add);
     return wrap;
+  }
+
+  _sources(owner) {
+    const out = [];
+    asList(owner?.entities || owner?.entity).forEach((e) => {
+      const id = typeof e === 'string' ? e : e?.entity;
+      (this._hass?.states[id]?.attributes.source_list || []).forEach((x) => !out.includes(x) && out.push(x));
+    });
+    return out;
   }
 
   _fieldsInto(box, owner, fields) {
