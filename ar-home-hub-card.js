@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.0.3';
+const AR_HUB_VERSION = '2.0.4';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -2810,6 +2810,7 @@ const COMMON = [
   { k: 'color', t: 'select', l: 'Colour', o: [['', 'Default'], ...Object.keys(PALETTE).map((x) => [x, cap(x)])], custom: true },
   { k: 'chips', t: 'bool', l: 'Show its chips at the top', def: true },
 ];
+const COMMON_APPS = ['Netflix', 'YouTube', 'DStv', 'Showmax', 'Prime Video', 'Disney+', 'Apple TV', 'Apple Music', 'Spotify', 'Plex', 'Twitch', 'SABC Plus', 'Kodi', 'Settings'];
 const CHIP_KEYS = [['people', 'People home'], ['lights', 'Lights on'], ['alarm', 'Alarm state'], ['doors', 'Open doors & windows'], ['locks', 'Unlocked locks'], ['temperature', 'Temperature'], ['humidity', 'Humidity'], ['ac', 'AC running'], ['motion', 'Motion'], ['media', 'Now playing'], ['solar', 'Solar power'], ['battery', 'Battery low'], ['loadshedding', 'Load-shedding'], ['covers', 'Gate / garage open'], ['geyser', 'Geyser heating'], ['weather', 'Weather'], ['irrigation', 'Watering'], ['appliances', 'Appliances running'], ['ev', 'Car charging'], ['network', 'Internet down'], ['doorbell', 'Doorbell'], ['custom', 'Custom sections']];
 const HEADER = [
   { k: 'name', t: 'text', l: 'Name in the greeting (blank = logged-in user)' },
@@ -3191,9 +3192,10 @@ class ArHomeHubCardEditor extends HTMLElement {
         if (sub.t !== 'source') return fs.appendChild(this._field(it, sub));
         /* drop-down of the sources Home Assistant reports for this section's TVs; typing still allowed */
         const found = this._sources(owner);
-        const opts = [...new Set([...(it.source && !found.includes(it.source) ? [it.source] : []), ...found])];
+        const common = COMMON_APPS.filter((x) => !found.some((y) => y.toLowerCase() === x.toLowerCase()));
+        const opts = [...(it.source && !found.includes(it.source) && !common.includes(it.source) ? [[it.source, it.source]] : []), ...found.map((x) => [x, x]), ...common.map((x) => [x, found.length ? `${x} (common app)` : x])];
         fs.appendChild(
-          this._field(it, { ...sub, t: 'select', custom: true, l: found.length ? sub.l : `${sub.l} (TV off: turn it on to list its apps, or type one)`, o: opts.map((x) => [x, x]) }, () => {
+          this._field(it, { ...sub, t: 'select', custom: true, l: found.length ? sub.l : `${sub.l} (TV hasn't reported its apps: showing common ones, or type one)`, o: opts }, () => {
             if (it.source && !it.name) it.name = it.source;
             this._emit(true);
           })
@@ -3239,13 +3241,33 @@ class ArHomeHubCardEditor extends HTMLElement {
     return wrap;
   }
 
+  /* Sources the TVs in this section report now, or reported last time they were on (from history). */
   _sources(owner) {
     const out = [];
-    asList(owner?.entities || owner?.entity).forEach((e) => {
-      const id = typeof e === 'string' ? e : e?.entity;
-      (this._hass?.states[id]?.attributes.source_list || []).forEach((x) => !out.includes(x) && out.push(x));
+    const ids = asList(owner?.entities || owner?.entity).map((e) => (typeof e === 'string' ? e : e?.entity)).filter(Boolean);
+    ids.forEach((id) => {
+      const live = this._hass?.states[id]?.attributes.source_list;
+      (live?.length ? live : this._srcCache?.[id] || []).forEach((x) => !out.includes(x) && out.push(x));
+      if (!live?.length) this._srcHistory(id);
     });
     return out;
+  }
+
+  async _srcHistory(id) {
+    this._srcCache = this._srcCache || {};
+    this._srcBusy = this._srcBusy || {};
+    if (id in this._srcCache || this._srcBusy[id] || !this._hass?.callWS) return;
+    this._srcBusy[id] = true;
+    let list = [];
+    try {
+      const end = new Date();
+      const r = await this._hass.callWS({ type: 'history/history_during_period', start_time: new Date(end - 7 * 864e5).toISOString(), end_time: end.toISOString(), entity_ids: [id], minimal_response: false, no_attributes: false, significant_changes_only: false });
+      const rows = r?.[id] || [];
+      for (let i = rows.length - 1; i >= 0 && !list.length; i--) list = (rows[i].a || rows[i].attributes || {}).source_list || [];
+    } catch (e) {}
+    this._srcCache[id] = list;
+    this._srcBusy[id] = false;
+    if (list.length) this._render();
   }
 
   _fieldsInto(box, owner, fields) {
