@@ -1,0 +1,237 @@
+# AR Home Hub v2 — full example using every section type.
+# You don't need all of these: add only the sections a client has, in any order.
+# Every entity line can be a plain entity id, or "- entity: ..." with name / icon to rename it.
+
+type: custom:ar-home-hub-card
+max_width: 560px
+subtitle: A R Smart Home Automation
+
+# Who's home strip under the greeting (Settings → People in Home Assistant)
+presence:
+  - person.marsh
+  - person.lerato
+  - person.thabo
+  - person.gran
+
+# Hide chips you don't want at the top (see README for the full list)
+hide_chips:
+  - humidity
+
+scenes:
+  - entity: script.good_night
+    name: Good night
+    label: Staged lights off
+    icon: mdi:weather-night
+    style: night
+  - entity: script.good_morning
+    name: Good morning
+    label: Lights on
+    icon: mdi:weather-sunny
+    style: morning
+  - entity: script.goodbye
+    name: Goodbye
+    label: Off + arm away
+    icon: mdi:exit-run
+    style: away
+
+sections:
+  - type: lights
+    name: Lights
+    entities:
+      - entity: switch.hdl_200_21_ent_ch1   # HDL channel renamed for the client
+        name: Lounge lights
+        room: Lounge
+        icon: mdi:ceiling-light
+      - entity: light.dining
+        name: Dining
+        room: Dining
+        icon: mdi:silverware-fork-knife
+      - entity: light.kitchen
+        room: Kitchen
+        icon: mdi:stove
+      - entity: light.patio
+        room: Patio
+        icon: mdi:outdoor-lamp
+      - entity: light.lamp
+        room: Lounge
+        icon: mdi:floor-lamp
+      - entity: light.main_bed
+        name: Lights
+        room: Main bed
+        icon: mdi:bed-king
+
+  - type: security
+    name: Security
+    alarm: alarm_control_panel.home        # add "code: 1234" here only if you accept it being in the dashboard
+    cameras:
+      - entity: camera.front_gate
+        name: Front gate
+      - entity: camera.driveway
+        name: Driveway
+        motion: binary_sensor.driveway_motion   # tile glows when this sees motion
+      - camera.patio
+      - entity: camera.garage
+        name: Garage
+        card:                                    # optional: your own live card when tapped
+          type: custom:webrtc-camera
+          url: garage_cam
+    contacts:
+      - binary_sensor.front_door
+      - binary_sensor.garage_door
+      - binary_sensor.kitchen_window
+    locks:
+      - lock.front_door
+      - lock.gate
+
+  - type: climate
+    name: Climate
+    entities:
+      - climate.lounge_ac
+      - climate.main_bed_ac
+    sensors:
+      - name: Lounge
+        temperature: sensor.snzb_02d_sonoff_a480150b1e_temperature
+        humidity: sensor.snzb_02d_sonoff_a480150b1e_humidity
+
+  - type: media
+    name: TV & audio
+    entities:
+      - entity: media_player.living_room_living_room_2
+        name: Lounge TV
+      - media_player.kitchen_speaker
+    remote_card:                                # optional: your remote card underneath
+      type: custom:firemote-card
+      entity: media_player.living_room_living_room_2
+      device_family: apple-tv
+      device_type: appletv-4k-gen3
+
+  - type: energy
+    name: Solar & power
+    solar: sensor.sunsynk_pv_power
+    load: sensor.sunsynk_load_power
+    grid: sensor.sunsynk_grid_power
+    battery_power: sensor.sunsynk_battery_power
+    battery_invert: true                        # Sunsynk/Deye: positive = discharging
+    battery_soc: sensor.sunsynk_battery_soc
+    battery_capacity: 10.24                     # kWh, for "battery covers about X h"
+    loadshedding_stage: sensor.load_shedding_stage_eskom
+    loadshedding_area: sensor.load_shedding_area_jhb
+    solar_today: sensor.solar_today
+    load_today: sensor.load_today
+    grid_today: sensor.grid_today
+
+  - type: covers
+    name: Gate & blinds
+    entities:
+      - cover.gate
+      - cover.garage
+      - cover.lounge_blinds
+      - entity: switch.gate_pulse               # a Sonoff pulse relay works too
+        name: Pedestrian gate
+        kind: pulse
+
+  - type: motion
+    name: Motion
+    entities:
+      - entity: binary_sensor.lounge_motion_sensor_sonoff_a480150fd2
+        name: Lounge
+      - entity: binary_sensor.dining_motion_sensor_sonoff_a480150fd6
+        name: Dining
+      - entity: binary_sensor.driveway_motion
+        name: Driveway
+
+  - type: presence
+    name: Who's home
+    entities:
+      - person.marsh
+      - person.lerato
+      - person.thabo
+      - person.gran
+
+  - type: doorbell
+    name: Doorbell
+    camera: camera.doorbell
+    ding: binary_sensor.doorbell_ding
+    buttons:
+      - entity: cover.gate
+        name: Open gate
+        icon: mdi:gate-open
+
+  - type: weather
+    name: Weather
+    entity: weather.home
+
+  - type: custom                                # your own section: any name, icon, colour, entities
+    name: Utilities
+    icon: mdi:meter-electric
+    color: amber
+    entities:
+      - entity: sensor.prepaid_units
+        name: Prepaid units
+      - sensor.water_today
+      - sensor.gas_level
+      - switch.pool_pump
+
+  - type: water
+    name: Water
+    tank: sensor.jojo_tank
+    tank_name: JoJo tank
+    usage: sensor.water_today
+    switches:
+      - switch.pool_pump
+      - switch.borehole
+
+  - type: irrigation
+    name: Irrigation
+    zones:
+      - entity: switch.irrigation_zone_1
+        remaining: sensor.zone_1_remaining
+      - switch.irrigation_zone_2
+      - switch.irrigation_zone_3
+    next_run: sensor.irrigation_next_run
+    rain_delay: switch.rain_delay
+
+  - type: appliances
+    name: Appliances
+    entities:
+      - entity: sensor.washer_run_state
+        name: Washer
+        remaining: sensor.washer_remaining
+      - entity: sensor.dishwasher_state
+        name: Dishwasher
+        icon: mdi:dishwasher
+
+  - type: ev
+    name: EV charger
+    charger: switch.wallbox
+    power: sensor.wallbox_power
+    battery: sensor.car_battery
+    range: sensor.car_range
+    plug: binary_sensor.car_plug
+    target: number.charge_target
+    energy: sensor.wallbox_session
+
+  - type: network
+    name: Network
+    internet: binary_sensor.internet
+    download: sensor.speedtest_download
+    upload: sensor.speedtest_upload
+    ping: sensor.speedtest_ping
+    clients: sensor.reyee_clients
+    entities:
+      - switch.router
+      - button.router_restart
+
+  - type: geyser
+    name: Geyser
+    switch: switch.geyser_sonoff_1001db1327_1
+    switch_name: Main geyser
+    power: sensor.geyser_sonoff_1001db1327_power
+    current: sensor.geyser_sonoff_1001db1327_current
+    voltage: sensor.geyser_sonoff_1001db1327_voltage
+    energy_day: sensor.geyser_sonoff_1001db1327_energy_day
+    energy_month: sensor.geyser_sonoff_1001db1327_energy_month
+
+  - type: amp
+    name: Arylic amp
+    entity: media_player.arylic_amp
