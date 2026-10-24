@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.0.0';
+const AR_HUB_VERSION = '2.0.1';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -362,7 +362,14 @@ button:focus-visible,[role="slider"]:focus-visible{outline:2px solid var(--cyan)
 .cb.on{color:var(--teal)}
 .vol{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--ink-2);font-family:var(--fm);font-size:12px}
 .vol input{flex:1;accent-color:var(--violet);min-width:0}
-.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:12px 10px;margin-top:12px}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,64px);justify-content:center;gap:12px 10px;margin-top:12px}
+.apps.top{justify-content:start;margin:0 0 12px}
+.chiprow.top{margin:0 0 12px}
+.np .art{width:46px;height:46px;border-radius:12px;flex:none;overflow:hidden;background:linear-gradient(135deg,#9b8cff,#5fd4ff 60%,#3ee0b4);display:grid;place-items:center;color:#0b0f17}
+.np .art img{width:100%;height:100%;object-fit:cover;display:block}
+.np .meta{flex:1;min-width:0}
+.np .meta b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np .meta span{font-size:11.5px;color:var(--ink-2)}
 .app{appearance:none;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink-2);min-width:0}
 .app .tile{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;overflow:hidden;
   background:color-mix(in srgb,var(--app,#9b8cff) 16%,rgba(255,255,255,.05));border:1px solid color-mix(in srgb,var(--app,#9b8cff) 30%,transparent);
@@ -378,7 +385,7 @@ button:focus-visible,[role="slider"]:focus-visible{outline:2px solid var(--cyan)
 .src ha-icon{--mdc-icon-size:16px}
 .src.sel{background:rgba(62,224,180,.14);border-color:rgba(62,224,180,.5);color:var(--teal)}
 .src.vsel{background:rgba(155,140,255,.16);border-color:rgba(155,140,255,.55);color:var(--violet)}
-.remote{margin-top:12px}
+.mp~.remote,.vol~.remote,.apps.top+.remote,.chiprow.top+.remote{margin-top:12px}
 /* covers */
 .cov{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:11px 12px;transition:border-color .3s,background .3s}
 .cov+.cov{margin-top:8px}
@@ -1286,9 +1293,12 @@ def('media', {
   body(c, s, p) {
     const ents = s.entities;
     const top = s.apps_position === 'top';
-    const apps = `<div class="${s.apps_style === 'chips' ? 'chiprow' : 'apps'}" id="${p}apps"></div>`;
+    const apps = `<div class="${s.apps_style === 'chips' ? 'chiprow' : 'apps'}${top ? ' top' : ''}" id="${p}apps"></div>`;
+    s._compact = s.player ? s.player === 'compact' : !!s.remote_card;
+    const strip = `<div class="np" id="${p}np" hidden><div class="art" id="${p}art"><ha-icon icon="mdi:movie-open"></ha-icon></div>
+      <div class="meta"><b id="${p}tt"></b><span id="${p}sb"></span><div class="prog"><i id="${p}pg"></i></div></div></div>`;
     return `${ents.length > 1 ? `<div class="tabs">${ents.map((e, i) => `<button class="tab" data-act="mtab" data-s="${s._k}" data-i="${i}" id="${p}mt${i}"><i id="${p}mti${i}"></i>${esc(c.nm(e))}</button>`).join('')}</div>` : ''}
-      ${ents.length ? `<div class="mp"><div class="art" id="${p}art"><ha-icon icon="mdi:television-play"></ha-icon></div><div class="mi"><div class="mapp" id="${p}app"></div><b id="${p}tt"></b><span id="${p}sb"></span>
+      ${ents.length && s._compact ? strip : ''}${ents.length && !s._compact ? `<div class="mp"><div class="art" id="${p}art"><ha-icon icon="mdi:television-play"></ha-icon></div><div class="mi"><div class="mapp" id="${p}app"></div><b id="${p}tt"></b><span id="${p}sb"></span>
         <div class="prog"><i id="${p}pg"></i></div>
         <div class="ctrls"><button class="cb" data-act="mcmd" data-c="media_previous_track" data-s="${s._k}" aria-label="Previous"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
           <button class="cb pl" data-act="mcmd" data-c="media_play_pause" data-s="${s._k}" aria-label="Play or pause"><ha-icon id="${p}pl" icon="mdi:play"></ha-icon></button>
@@ -1320,6 +1330,25 @@ def('media', {
       const app = a.app_name || a.source || '';
       const [, col] = appStyle(app);
       const art = c.$(p + 'art');
+      const word0 = { playing: 'Playing', paused: 'Paused', idle: 'Idle', standby: 'Standby', off: 'Off', on: 'On', buffering: 'Loading', unavailable: 'Unavailable' }[st?.state] || cap(st?.state || 'missing');
+      if (s._compact) {
+        const show = st && ['playing', 'paused'].includes(st.state) && (a.media_title || app);
+        c.$(p + 'np').hidden = !show;
+        if (show) {
+          c.$(p + 'tt').textContent = a.media_title || app;
+          c.$(p + 'sb').textContent = [a.media_artist || a.media_series_title, app].filter(Boolean).join(' · ') || word0;
+          const pic = a.entity_picture;
+          if (pic && art.dataset.pic !== pic) {
+            art.dataset.pic = pic;
+            art.innerHTML = `<img alt="" src="${esc(c.url(pic))}">`;
+          } else if (!pic && art.dataset.pic) {
+            delete art.dataset.pic;
+            art.innerHTML = '<ha-icon icon="mdi:movie-open"></ha-icon>';
+          }
+          this.tick(c, s, p);
+        }
+        sum = [it.room || s.room, word0, app, a.media_title].filter(Boolean).join(' · ');
+      } else {
       const pic = a.entity_picture;
       if (pic && art.dataset.pic !== pic) {
         art.dataset.pic = pic;
@@ -1345,6 +1374,7 @@ def('media', {
       }
       this.tick(c, s, p);
       sum = [it.room || s.room, word, app, a.media_title].filter(Boolean).join(' · ');
+      }
     }
     const key = JSON.stringify(apps.map((x) => x.name || x.source));
     const box = c.$(p + 'apps');
@@ -2653,7 +2683,17 @@ function autoSetup(hass) {
   if (climates.length || temp)
     sections.push({ type: 'climate', name: 'Climate', ...(climates.length ? { entities: climates } : {}), ...(temp || hum ? { sensors: [{ ...(temp ? { temperature: temp } : {}), ...(hum ? { humidity: hum } : {}) }] } : {}) });
   const media = by('media_player').filter((e) => !skip.test(e)).slice(0, 4);
-  if (media.length) sections.push({ type: 'media', name: 'TV & audio', entities: media });
+  if (media.length) {
+    const m = { type: 'media', name: 'TV & audio', entities: media };
+    /* Apple TV with Firemote installed: put the remote back under it, like v1 */
+    if (customElements.get('firemote-card')) {
+      const remotes = by('remote');
+      const tv = media.find((e) => S[e].attributes.app_id || /apple|atv/i.test(e) || remotes.some((r) => e.split('.')[1].startsWith(r.split('.')[1])));
+      const rem = tv && remotes.find((r) => tv.split('.')[1].startsWith(r.split('.')[1]));
+      if (tv) m.remote_card = { type: 'custom:firemote-card', entity: tv, device_family: 'apple-tv', ...(rem ? { apple_tv_remote_entity: rem } : {}) };
+    }
+    sections.push(m);
+  }
   const power = by('sensor').filter((e) => dc(e) === 'power');
   const solar = like(/\bpv|solar/i, power)[0];
   if (solar) {
@@ -2723,8 +2763,12 @@ const SCHEMA = {
   presence: [LF('entities', 'People', ['person', 'device_tracker'], ['name', EF('battery', 'Phone battery (optional)', ['sensor'])])],
   media: [
     LF('entities', 'TVs and speakers', ['media_player'], ['name', 'room']),
-    { k: 'apps_style', t: 'select', l: 'App buttons', o: [['', 'Icons'], ['chips', 'Text chips']] },
-    { k: 'remote_card', t: 'yaml', l: 'Remote card underneath (optional), e.g. type: custom:firemote-card' },
+    { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
+    { k: 'player', t: 'select', l: 'Layout', o: [['', 'Automatic (remote first when a remote card is set)'], ['compact', 'Remote first: small now-playing strip'], ['full', 'Big player with controls and volume']] },
+    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'text', l: 'Source / app name to open' }, { k: 'image', t: 'text', l: 'Logo image (e.g. /local/apps/netflix.png)' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
+    { k: 'apps_style', t: 'select', l: 'App button style', o: [['', 'Logo tiles'], ['chips', 'Text chips']] },
+    { k: 'apps_position', t: 'select', l: 'App buttons', o: [['', 'Under the remote'], ['top', 'Above the remote']] },
+    { k: 'show_app_names', t: 'bool', l: 'Show names under the logos', def: true },
   ],
   covers: [LF('entities', 'Gates, garage doors, blinds, curtains', ['cover', 'button', 'switch', 'script', 'lock', 'input_button'], ['name', 'icon', { k: 'kind', t: 'select', l: 'Style', o: [['', 'Automatic'], ['gate', 'Gate / garage (one button)'], ['blind', 'Blind (up, stop, down)'], ['pulse', 'Push button']] }])],
   energy: [

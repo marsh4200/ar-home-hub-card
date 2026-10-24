@@ -99,11 +99,26 @@ sections:
       - entity: media_player.living_room_living_room_2
         name: Lounge TV
       - media_player.kitchen_speaker
-    remote_card:                                # optional: your remote card underneath
+    remote_card:                                # your remote card; with one set, the remote is front and centre
       type: custom:firemote-card
       entity: media_player.living_room_living_room_2
       device_family: apple-tv
       device_type: appletv-4k-gen3
+      apple_tv_remote_entity: remote.living_room_living_room
+    # player: full                              # big built-in player instead of the small now-playing strip
+    apps:                                       # shortcut buttons under the remote (leave out to use the TV's own source list)
+      - name: YouTube
+        source: YouTube
+        image: /local/apps/youtube.png          # 256x256 PNG in /config/www/apps/
+      - name: Netflix
+        source: Netflix
+        image: /local/apps/netflix.png
+      - name: DStv
+        source: DStv
+        image: /local/apps/dstv.png
+      - name: Prime
+        source: Prime Video
+        image: /local/apps/prime.png
 
   - type: energy
     name: Solar & power
