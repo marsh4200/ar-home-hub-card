@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.0.1';
+const AR_HUB_VERSION = '2.0.2';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -2765,7 +2765,7 @@ const SCHEMA = {
     LF('entities', 'TVs and speakers', ['media_player'], ['name', 'room']),
     { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
     { k: 'player', t: 'select', l: 'Layout', o: [['', 'Automatic (remote first when a remote card is set)'], ['compact', 'Remote first: small now-playing strip'], ['full', 'Big player with controls and volume']] },
-    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'text', l: 'Source / app name to open' }, { k: 'image', t: 'text', l: 'Logo image (e.g. /local/apps/netflix.png)' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
+    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'text', l: 'Source / app name to open' }, { k: 'image', t: 'image', l: 'Logo' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
     { k: 'apps_style', t: 'select', l: 'App button style', o: [['', 'Logo tiles'], ['chips', 'Text chips']] },
     { k: 'apps_position', t: 'select', l: 'App buttons', o: [['', 'Under the remote'], ['top', 'Above the remote']] },
     { k: 'show_app_names', t: 'bool', l: 'Show names under the logos', def: true },
@@ -2846,6 +2846,15 @@ const ED_STYLE = `
 .pbtn{appearance:none;border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--primary-color);color:var(--text-primary-color,#fff)}
 .pbtn.ghost{background:none;color:var(--primary-color);border:1px solid var(--primary-color)}
 .pbtn.warn{background:var(--warning-color,#ff9800)}
+.imgf{grid-column:1/-1;display:flex;gap:12px;align-items:center;border:1px dashed var(--divider-color,#3336);border-radius:10px;padding:8px}
+.imgf.drop{border-color:var(--primary-color);background:color-mix(in srgb,var(--primary-color) 10%,transparent)}
+.imgf .thumb{width:56px;height:56px;border-radius:14px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--card-background-color);border:1px solid var(--divider-color,#3336);color:var(--secondary-text-color)}
+.imgf .thumb img{width:100%;height:100%;object-fit:cover}
+.imgt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.imgt b{font-size:13px}
+.imgt span{font-size:12px;color:var(--secondary-text-color)}
+.imgb{display:flex;gap:6px;margin-top:4px}
+.pbtn.sm{padding:6px 10px;font-size:12.5px}
 .note{font-size:12.5px;color:var(--secondary-text-color);line-height:1.5;margin:0}
 .banner{border-radius:12px;padding:12px;background:color-mix(in srgb,var(--primary-color) 12%,transparent);display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--secondary-text-color);margin:18px 2px 8px}
@@ -2872,6 +2881,49 @@ const h3el = (t) => {
   e.textContent = t;
   return e;
 };
+
+/* Shrink a picked image to a square logo (transparent padding, keeps PNG transparency). */
+async function squareLogo(file, size) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, bad) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = () => bad(new Error('That file is not an image the browser can read.'));
+      i.src = url;
+    });
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const g = cv.getContext('2d');
+    const w = img.naturalWidth || size;
+    const h = img.naturalHeight || size;
+    const k = Math.min(size / w, size / h);
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(img, (size - w * k) / 2, (size - h * k) / 2, w * k, h * k);
+    return cv;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+/* Store the logo in Home Assistant's image store; fall back to embedding it in the card config. */
+async function storeLogo(hass, file) {
+  const cv = await squareLogo(file, 256);
+  try {
+    const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+    const fd = new FormData();
+    fd.append('file', blob, (file.name || 'logo').replace(/\.[^.]+$/, '') + '.png');
+    const res = await hass.fetchWithAuth('/api/image/upload', { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('upload ' + res.status);
+    const j = await res.json();
+    if (!j.id) throw new Error('no id');
+    return { url: `/api/image/serve/${j.id}/original`, how: 'Saved in Home Assistant' };
+  } catch (e) {
+    const small = await squareLogo(file, 160);
+    let data = small.toDataURL('image/webp', 0.88);
+    if (!data.startsWith('data:image/webp')) data = small.toDataURL('image/png');
+    return { url: data, how: 'Saved inside the card' };
+  }
+}
 
 async function loadHaPickers() {
   if (customElements.get('ha-selector')) return true;
@@ -2970,7 +3022,53 @@ class ArHomeHubCardEditor extends HTMLElement {
     }
   }
 
+  _imageField(obj, f, onChange) {
+    const w = document.createElement('div');
+    w.className = 'imgf';
+    const draw = (msg) => {
+      const v = obj[f.k];
+      w.innerHTML = `<div class="thumb">${v ? `<img alt="" src="${esc(this._hass?.hassUrl ? this._hass.hassUrl(v) : v)}">` : '<ha-icon icon="mdi:image-plus"></ha-icon>'}</div>
+        <div class="imgt"><b>${esc(f.l)}</b><span>${esc(msg || (v ? 'Tap Change to pick another, or drop a picture here' : 'Upload a picture or drop one here. PNG with a clear background looks best'))}</span>
+        <div class="imgb"><button type="button" class="pbtn ghost sm" data-up>${v ? 'Change' : 'Upload logo'}</button>${v ? '<button type="button" class="pbtn ghost sm" data-rm>Remove</button>' : ''}</div></div>
+        <input type="file" accept="image/*" hidden>`;
+    };
+    const take = async (file) => {
+      if (!file) return;
+      draw('Uploading…');
+      try {
+        const r = await storeLogo(this._hass, file);
+        obj[f.k] = r.url;
+        draw(r.how);
+        onChange ? onChange() : this._emit();
+      } catch (e) {
+        draw(e.message);
+      }
+    };
+    w.addEventListener('click', (e) => {
+      if (e.target.closest('[data-up]')) w.querySelector('input').click();
+      if (e.target.closest('[data-rm]')) {
+        delete obj[f.k];
+        draw();
+        onChange ? onChange() : this._emit();
+      }
+    });
+    w.addEventListener('change', (e) => e.target.type === 'file' && take(e.target.files[0]));
+    w.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      w.classList.add('drop');
+    });
+    w.addEventListener('dragleave', () => w.classList.remove('drop'));
+    w.addEventListener('drop', (e) => {
+      e.preventDefault();
+      w.classList.remove('drop');
+      take(e.dataTransfer.files[0]);
+    });
+    draw();
+    return w;
+  }
+
   _field(obj, f, onChange) {
+    if (f.t === 'image') return this._imageField(obj, f, onChange);
     const val = obj[f.k] ?? (f.t === 'bool' ? f.def ?? false : f.t === 'multi' || f.t === 'people' ? [] : '');
     const set = (v) => {
       if (f.t === 'people' || f.t === 'multi') v = asList(v);
