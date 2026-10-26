@@ -6,7 +6,7 @@
  * appliances, doorbell, EV charger, network, camera, or your own custom section.
  * AR Smart Home — https://arsmarthome.co.za
  */
-const AR_HUB_VERSION = '2.1.0';
+const AR_HUB_VERSION = '2.2.0';
 const AR_HUB_FONTS =
   'https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -1591,7 +1591,7 @@ def('presence', {
 
 /* ---------------- media (TV, Apple TV, speakers) ---------------- */
 def('media', {
-  title: 'TV & audio', icon: 'mdi:television-play', color: 'violet', desc: 'TVs and speakers: now playing, controls, apps, your remote card',
+  title: 'TV & audio', icon: 'mdi:television-play', color: 'violet', desc: 'TVs and speakers together in one section',
   norm: (s) => ({ ...s, entities: asItems(s.entities || s.entity), apps: asList(s.apps).map((a) => (typeof a === 'string' ? { name: a } : { ...a })), remote_card: s.remote_card || s.card }),
   has: (s) => s.entities.length > 0 || !!s.remote_card,
   watch: (s) => ids(s.entities, s.apps.map((a) => a.entity)),
@@ -1601,10 +1601,10 @@ def('media', {
     const top = s.apps_position === 'top';
     const apps = `<div class="${s.apps_style === 'chips' ? 'chiprow' : 'apps'}${top ? ' top' : ''}" id="${p}apps"></div>`;
     s._compact = s.player ? s.player === 'compact' : !!s.remote_card;
-    const strip = `<div class="np" id="${p}np" hidden><div class="art" id="${p}art"><ha-icon icon="mdi:movie-open"></ha-icon></div>
+    const strip = `<div class="np" id="${p}np" hidden><div class="art" id="${p}art"><ha-icon icon="${this.stripIcon || 'mdi:movie-open'}"></ha-icon></div>
       <div class="meta"><b id="${p}tt"></b><span id="${p}sb"></span><div class="prog"><i id="${p}pg"></i></div></div></div>`;
     return `${ents.length > 1 ? `<div class="tabs">${ents.map((e, i) => `<button class="tab" data-act="mtab" data-s="${s._k}" data-i="${i}" id="${p}mt${i}"><i id="${p}mti${i}"></i>${esc(c.nm(e))}</button>`).join('')}</div>` : ''}
-      ${ents.length && s._compact ? strip : ''}${ents.length && !s._compact ? `<div class="mp"><div class="art" id="${p}art"><ha-icon icon="mdi:television-play"></ha-icon></div><div class="mi"><div class="mapp" id="${p}app"></div><b id="${p}tt"></b><span id="${p}sb"></span>
+      ${ents.length && s._compact ? strip : ''}${ents.length && !s._compact ? `<div class="mp"><div class="art" id="${p}art"><ha-icon icon="${this.artIcon || 'mdi:television-play'}"></ha-icon></div><div class="mi"><div class="mapp" id="${p}app"></div><b id="${p}tt"></b><span id="${p}sb"></span>
         <div class="prog"><i id="${p}pg"></i></div>
         <div class="ctrls"><button class="cb" data-act="mcmd" data-c="media_previous_track" data-s="${s._k}" aria-label="Previous"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
           <button class="cb pl" data-act="mcmd" data-c="media_play_pause" data-s="${s._k}" aria-label="Play or pause"><ha-icon id="${p}pl" icon="mdi:play"></ha-icon></button>
@@ -1649,7 +1649,7 @@ def('media', {
             art.innerHTML = `<img alt="" src="${esc(c.url(pic))}">`;
           } else if (!pic && art.dataset.pic) {
             delete art.dataset.pic;
-            art.innerHTML = '<ha-icon icon="mdi:movie-open"></ha-icon>';
+            art.innerHTML = `<ha-icon icon="${this.stripIcon || 'mdi:movie-open'}"></ha-icon>`;
           }
           this.tick(c, s, p);
         }
@@ -1661,7 +1661,7 @@ def('media', {
         art.innerHTML = `<img alt="" src="${esc(c.url(pic))}">`;
       } else if (!pic && art.dataset.pic !== '') {
         art.dataset.pic = '';
-        art.innerHTML = `<ha-icon icon="${appStyle(app)[2] === 'mdi:application' ? 'mdi:television-play' : appStyle(app)[2]}"></ha-icon>`;
+        art.innerHTML = `<ha-icon icon="${appStyle(app)[2] === 'mdi:application' ? this.artIcon || 'mdi:television-play' : appStyle(app)[2]}"></ha-icon>`;
       }
       art.style.background = pic ? '#0b0f17' : `linear-gradient(135deg,${col},#0b0f17 85%)`;
       const word = { playing: 'Playing', paused: 'Paused', idle: 'Idle', standby: 'Standby', off: 'Off', on: 'On', buffering: 'Loading', unavailable: 'Unavailable' }[st?.state] || cap(st?.state || 'missing');
@@ -1706,7 +1706,7 @@ def('media', {
     s.entities.forEach((x) => {
       const xs = c.st(x.entity);
       if (xs?.state === 'playing')
-        ctx.chip('media', chipHtml(s._k, { tint: 'var(--violet)', dot: 1, text: `${xs.attributes.app_name || xs.attributes.media_title || 'Playing'} · ${c.nm(x)}` }));
+        ctx.chip(this.chipKey || 'media', chipHtml(s._k, { tint: 'var(--violet)', dot: 1, text: `${xs.attributes.app_name || xs.attributes.media_title || 'Playing'} · ${c.nm(x)}` }));
     });
     return { sum: sum || 'Remote' };
   },
@@ -1748,6 +1748,20 @@ def('media', {
   open(c, s, p) {
     if (s.remote_card) c.mount('remote:' + s._k, c.$(p + 'remote'), s.remote_card);
   },
+});
+
+/* ---------------- tv and audio: the media section split in two ---------------- */
+const MEDIA_TYPES = ['media', 'tv', 'audio'];
+const { key: _mk, ...MEDIA } = TYPES.media;
+def('tv', {
+  ...MEDIA,
+  title: 'TV', icon: 'mdi:television-play', desc: 'TVs, Apple TV, streaming boxes: now playing, apps, your remote card',
+  chipKey: 'tv',
+});
+def('audio', {
+  ...MEDIA,
+  title: 'Audio', icon: 'mdi:speaker', desc: 'Speakers, Sonos, amps and receivers: now playing, controls, sources',
+  chipKey: 'audio',
 });
 
 /* ---------------- covers: gates, garage, blinds, curtains ---------------- */
@@ -2450,7 +2464,7 @@ function legacySections(config) {
     lights: config.lights?.length ? { type: 'lights', id: 'lights', name: t.lights || 'Lights', entities: config.lights } : null,
     climate: climates.length || motion.length ? { type: 'climate', id: 'climate', name: t.climate || 'Climate and motion', icon: 'mdi:motion-sensor', color: 'cyan', sensors: climates, motion: config.motion } : null,
     camera: cam && (cam.card || cam.entity) ? { type: 'camera', id: 'camera', ...cam, name: t.camera || cam.name || 'Camera' } : null,
-    apple_tv: tv && (tv.card || tv.entity) ? { type: 'media', id: 'apple_tv', name: t.apple_tv || tv.name || 'Apple TV', icon: tv.icon || 'mdi:television-play', entities: tv.entity ? [tv.entity] : [], remote_card: tv.card, apps: tv.apps, apps_position: tv.apps_position, apps_style: tv.apps_style, show_app_names: tv.show_app_names, room: tv.room, show_sources: !!tv.apps } : null,
+    apple_tv: tv && (tv.card || tv.entity) ? { type: 'tv', id: 'apple_tv', name: t.apple_tv || tv.name || 'Apple TV', icon: tv.icon || 'mdi:television-play', entities: tv.entity ? [tv.entity] : [], remote_card: tv.card, apps: tv.apps, apps_position: tv.apps_position, apps_style: tv.apps_style, show_app_names: tv.show_app_names, room: tv.room, show_sources: !!tv.apps } : null,
     geyser: config.geyser?.switch ? { type: 'geyser', id: 'geyser', ...config.geyser, name: t.geyser || config.geyser.name || 'Geyser' } : null,
     amp: amp?.entity ? { type: 'amp', id: 'amp', ...amp, name: t.amp || amp.name || 'Amp' } : null,
   };
@@ -2624,7 +2638,7 @@ class ArHomeHubCard extends HTMLElement {
 
   _loadOpen() {
     const c = this._config;
-    const byId = (v) => c.sections.find((s) => s._id === v || s.type === v || (v === 'apple_tv' && s.type === 'media'));
+    const byId = (v) => c.sections.find((s) => s._id === v || s.type === v || (v === 'apple_tv' && (s.type === 'tv' || s.type === 'media')));
     try {
       const v = localStorage.getItem(this._storeKey());
       if (v === 'none') return null;
@@ -2901,7 +2915,7 @@ class ArHomeHubCard extends HTMLElement {
     c.sections.forEach((s) => {
       if (s._empty || s._broken) return;
       const T = TYPES[s.type];
-      if (T.tick && (this.isOpen(s) || s.type === 'media')) {
+      if (T.tick && (this.isOpen(s) || MEDIA_TYPES.includes(s.type))) {
         try {
           T.tick(this, s, s._k + '-');
         } catch (e) {}
@@ -2917,7 +2931,7 @@ class ArHomeHubCard extends HTMLElement {
     let order = 0;
     const ctxFor = (s) => ({
       chip: (key, html, pri = 0) => {
-        if (s?.chips === false || c.hide.has(key)) return;
+        if (s?.chips === false || c.hide.has(key) || (MEDIA_TYPES.includes(key) && c.hide.has('media'))) return;
         chips.push({ html, pri, o: order++ });
       },
     });
@@ -2992,18 +3006,34 @@ function autoSetup(hass) {
   const hum = by('sensor').find((e) => dc(e) === 'humidity' && indoor(e));
   if (climates.length || temp)
     sections.push({ type: 'climate', name: 'Climate', ...(climates.length ? { entities: climates } : {}), ...(temp || hum ? { sensors: [{ ...(temp ? { temperature: temp } : {}), ...(hum ? { humidity: hum } : {}) }] } : {}) });
-  const media = by('media_player').filter((e) => !skip.test(e)).slice(0, 4);
-  if (media.length) {
-    const m = { type: 'media', name: 'TV & audio', entities: media };
+  const media = by('media_player').filter((e) => !skip.test(e));
+  /* split players into TVs and audio: device class first, then the name */
+  const AUDIO_RE = /sonos|speaker|echo|alexa|homepod|nest_?(audio|mini)|google_?home|home_?mini|spotify|music|\bamp\b|amplifier|receiver|avr|denon|marantz|yamaha|onkyo|soundbar|sound_?bar|bose|jbl|wiim|volumio|squeeze|snapcast|mpd|radio|bluesound|heos|audio|stereo|ceiling_spk/i;
+  const TV_RE = /\btv\b|_tv|tv_|television|apple|atv|shield|roku|fire_?stick|fire_?tv|chromecast|android|webos|bravia|samsung|\blg\b|hisense|tcl|projector|kodi|plex|dstv|explora|xbox|playstation|ps5/i;
+  const isAudio = (e) => {
+    const d = dc(e);
+    if (d === 'tv') return false;
+    if (d === 'speaker' || d === 'receiver') return true;
+    if (S[e].attributes.app_id) return false;
+    const n = e + ' ' + (S[e].attributes.friendly_name || '');
+    if (AUDIO_RE.test(n) && !/\btv\b|television|apple_?tv/i.test(n)) return true;
+    if (TV_RE.test(n)) return false;
+    return !(S[e].attributes.source_list || []).some((x) => /hdmi|netflix|youtube/i.test(x));
+  };
+  const tvs = media.filter((e) => !isAudio(e)).slice(0, 4);
+  const speakers = media.filter(isAudio).slice(0, 4);
+  if (tvs.length) {
+    const m = { type: 'tv', name: 'TV', entities: tvs };
     /* Apple TV with Firemote installed: put the remote back under it, like v1 */
     if (customElements.get('firemote-card')) {
       const remotes = by('remote');
-      const tv = media.find((e) => S[e].attributes.app_id || /apple|atv/i.test(e) || remotes.some((r) => e.split('.')[1].startsWith(r.split('.')[1])));
+      const tv = tvs.find((e) => S[e].attributes.app_id || /apple|atv/i.test(e) || remotes.some((r) => e.split('.')[1].startsWith(r.split('.')[1])));
       const rem = tv && remotes.find((r) => tv.split('.')[1].startsWith(r.split('.')[1]));
       if (tv) m.remote_card = { type: 'custom:firemote-card', entity: tv, device_family: 'apple-tv', ...(rem ? { apple_tv_remote_entity: rem } : {}) };
     }
     sections.push(m);
   }
+  if (speakers.length) sections.push({ type: 'audio', name: 'Audio', entities: speakers });
   const power = by('sensor').filter((e) => dc(e) === 'power');
   const solar = like(/\bpv|solar/i, power)[0];
   if (solar) {
@@ -3098,6 +3128,54 @@ const SCHEMA = {
     EF('voltage', 'Voltage', ['sensor']), EF('energy_day', 'Energy today', ['sensor']), EF('energy_month', 'Energy this month', ['sensor']), EF('temperature', 'Water temperature', ['sensor']),
     { k: 'load_threshold', t: 'number', l: 'Counts as heating above (W)' },
   ],
+  tv: [
+    LF('entities', 'TVs', ['media_player'], ['name', 'room']),
+    { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
+    { k: 'player', t: 'select', l: 'Layout', o: [['', 'Automatic (remote first when a remote card is set)'], ['compact', 'Remote first: small now-playing strip'], ['full', 'Big player with controls and volume']] },
+    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'source', l: 'Source / app to open' }, { k: 'image', t: 'image', l: 'Logo' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
+    { k: 'apps_style', t: 'select', l: 'App button style', o: [['', 'Logo tiles'], ['chips', 'Text chips']] },
+    { k: 'apps_position', t: 'select', l: 'App buttons', o: [['', 'Under the remote'], ['top', 'Above the remote']] },
+    { k: 'show_app_names', t: 'bool', l: 'Show names under the logos', def: true },
+  ],
+  covers: [LF('entities', 'Gates, garage doors, blinds, curtains', ['cover', 'button', 'switch', 'script', 'lock', 'input_button'], ['name', 'icon', { k: 'kind', t: 'select', l: 'Style', o: [['', 'Automatic'], ['gate', 'Gate / garage (one button)'], ['blind', 'Blind (up, stop, down)'], ['pulse', 'Push button']] }])],
+  energy: [
+    EF('solar', 'Solar power now', ['sensor']), EF('load', 'House load now', ['sensor']), EF('grid', 'Grid power now', ['sensor']),
+    { k: 'grid_invert', t: 'bool', l: 'My grid sensor is negative when importing' },
+    EF('battery_power', 'Battery power now', ['sensor']), { k: 'battery_invert', t: 'bool', l: 'My battery sensor is positive when discharging (Sunsynk, Deye)' },
+    EF('battery_soc', 'Battery %', ['sensor']), { k: 'battery_capacity', t: 'number', l: 'Battery size in kWh (for hours left)' },
+    EF('loadshedding_stage', 'Load-shedding stage', ['sensor']), EF('loadshedding_area', 'Load-shedding area / schedule', ['sensor', 'calendar', 'binary_sensor']),
+    EF('solar_today', 'Solar today (kWh)', ['sensor']), EF('load_today', 'Used today (kWh)', ['sensor']), EF('grid_today', 'Bought from grid today (kWh)', ['sensor']),
+  ],
+  water: [EF('tank', 'Tank level %', ['sensor']), { k: 'tank_name', t: 'text', l: 'Tank name (e.g. JoJo tank)' }, EF('usage', 'Water used today', ['sensor']), LF('switches', 'Pumps and valves', ['switch', 'valve', 'input_boolean'], ['name'])],
+  geyser: [
+    EF('switch', 'Geyser switch', ['switch', 'input_boolean']), { k: 'switch_name', t: 'text', l: 'Switch name' }, EF('power', 'Power', ['sensor']), EF('current', 'Current', ['sensor']),
+    EF('voltage', 'Voltage', ['sensor']), EF('energy_day', 'Energy today', ['sensor']), EF('energy_month', 'Energy this month', ['sensor']), EF('temperature', 'Water temperature', ['sensor']),
+    { k: 'load_threshold', t: 'number', l: 'Counts as heating above (W)' },
+  ],
+  audio: [
+    LF('entities', 'Speakers, amps and receivers', ['media_player'], ['name', 'room']),
+    { k: 'remote_card', t: 'yaml', l: 'Remote card (e.g. type: custom:firemote-card)' },
+    { k: 'player', t: 'select', l: 'Layout', o: [['', 'Automatic (remote first when a remote card is set)'], ['compact', 'Remote first: small now-playing strip'], ['full', 'Big player with controls and volume']] },
+    LF('apps', 'App / source buttons (blank = the TV\'s own source list)', null, [{ k: 'name', t: 'text', l: 'Label' }, { k: 'source', t: 'source', l: 'Source / app to open' }, { k: 'image', t: 'image', l: 'Logo' }, RF.icon, { k: 'color', t: 'text', l: 'Colour (e.g. #e50914)' }], { noEntity: true }),
+    { k: 'apps_style', t: 'select', l: 'App button style', o: [['', 'Logo tiles'], ['chips', 'Text chips']] },
+    { k: 'apps_position', t: 'select', l: 'App buttons', o: [['', 'Under the remote'], ['top', 'Above the remote']] },
+    { k: 'show_app_names', t: 'bool', l: 'Show names under the logos', def: true },
+  ],
+  covers: [LF('entities', 'Gates, garage doors, blinds, curtains', ['cover', 'button', 'switch', 'script', 'lock', 'input_button'], ['name', 'icon', { k: 'kind', t: 'select', l: 'Style', o: [['', 'Automatic'], ['gate', 'Gate / garage (one button)'], ['blind', 'Blind (up, stop, down)'], ['pulse', 'Push button']] }])],
+  energy: [
+    EF('solar', 'Solar power now', ['sensor']), EF('load', 'House load now', ['sensor']), EF('grid', 'Grid power now', ['sensor']),
+    { k: 'grid_invert', t: 'bool', l: 'My grid sensor is negative when importing' },
+    EF('battery_power', 'Battery power now', ['sensor']), { k: 'battery_invert', t: 'bool', l: 'My battery sensor is positive when discharging (Sunsynk, Deye)' },
+    EF('battery_soc', 'Battery %', ['sensor']), { k: 'battery_capacity', t: 'number', l: 'Battery size in kWh (for hours left)' },
+    EF('loadshedding_stage', 'Load-shedding stage', ['sensor']), EF('loadshedding_area', 'Load-shedding area / schedule', ['sensor', 'calendar', 'binary_sensor']),
+    EF('solar_today', 'Solar today (kWh)', ['sensor']), EF('load_today', 'Used today (kWh)', ['sensor']), EF('grid_today', 'Bought from grid today (kWh)', ['sensor']),
+  ],
+  water: [EF('tank', 'Tank level %', ['sensor']), { k: 'tank_name', t: 'text', l: 'Tank name (e.g. JoJo tank)' }, EF('usage', 'Water used today', ['sensor']), LF('switches', 'Pumps and valves', ['switch', 'valve', 'input_boolean'], ['name'])],
+  geyser: [
+    EF('switch', 'Geyser switch', ['switch', 'input_boolean']), { k: 'switch_name', t: 'text', l: 'Switch name' }, EF('power', 'Power', ['sensor']), EF('current', 'Current', ['sensor']),
+    EF('voltage', 'Voltage', ['sensor']), EF('energy_day', 'Energy today', ['sensor']), EF('energy_month', 'Energy this month', ['sensor']), EF('temperature', 'Water temperature', ['sensor']),
+    { k: 'load_threshold', t: 'number', l: 'Counts as heating above (W)' },
+  ],
   amp: [EF('entity', 'Amplifier', ['media_player']), { k: 'step', t: 'number', l: 'Volume step for − / +' }],
   weather: [EF('entity', 'Weather', ['weather']), { k: 'days', t: 'number', l: 'Days of forecast (default 5)' }],
   irrigation: [
@@ -3124,7 +3202,7 @@ const COMMON = [
   { k: 'chips', t: 'bool', l: 'Show its chips at the top', def: true },
 ];
 const COMMON_APPS = ['Netflix', 'YouTube', 'DStv', 'Showmax', 'Prime Video', 'Disney+', 'Apple TV', 'Apple Music', 'Spotify', 'Plex', 'Twitch', 'SABC Plus', 'Kodi', 'Settings'];
-const CHIP_KEYS = [['people', 'People home'], ['lights', 'Lights on'], ['alarm', 'Alarm state'], ['doors', 'Open doors & windows'], ['locks', 'Unlocked locks'], ['temperature', 'Temperature'], ['humidity', 'Humidity'], ['ac', 'AC running'], ['motion', 'Motion'], ['media', 'Now playing'], ['solar', 'Solar power'], ['battery', 'Battery low'], ['loadshedding', 'Load-shedding'], ['covers', 'Gate / garage open'], ['geyser', 'Geyser heating'], ['weather', 'Weather'], ['irrigation', 'Watering'], ['appliances', 'Appliances running'], ['ev', 'Car charging'], ['network', 'Internet down'], ['doorbell', 'Doorbell'], ['custom', 'Custom sections']];
+const CHIP_KEYS = [['people', 'People home'], ['lights', 'Lights on'], ['alarm', 'Alarm state'], ['doors', 'Open doors & windows'], ['locks', 'Unlocked locks'], ['temperature', 'Temperature'], ['humidity', 'Humidity'], ['ac', 'AC running'], ['motion', 'Motion'], ['tv', 'TV playing'], ['audio', 'Music playing'], ['media', 'Now playing (TV & audio)'], ['solar', 'Solar power'], ['battery', 'Battery low'], ['loadshedding', 'Load-shedding'], ['covers', 'Gate / garage open'], ['geyser', 'Geyser heating'], ['weather', 'Weather'], ['irrigation', 'Watering'], ['appliances', 'Appliances running'], ['ev', 'Car charging'], ['network', 'Internet down'], ['doorbell', 'Doorbell'], ['custom', 'Custom sections']];
 const HEADER = [
   { k: 'name', t: 'text', l: 'Name in the greeting (blank = logged-in user)' },
   { k: 'subtitle', t: 'text', l: 'Line under the greeting' },
@@ -3671,7 +3749,7 @@ class ArHomeHubCardEditor extends HTMLElement {
         cfg.sections = secs.map((s) => {
           const o = { ...s };
           delete o.id;
-          if (o.type === 'media' && !o.apps) delete o.show_sources;
+          if (MEDIA_TYPES.includes(o.type) && !o.apps) delete o.show_sources;
           Object.keys(o).forEach((k) => o[k] === undefined && delete o[k]);
           return o;
         });

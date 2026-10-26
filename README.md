@@ -1,6 +1,6 @@
 # AR Home Hub Card
 
-One Lovelace card for the whole house. At the top: a greeting with a live clock, a **who's home** strip with each person's photo, status chips, and scene buttons. Below that are collapsible **sections** you pick yourself, in any order and as many as you like: lights, security, climate, TV and audio, solar and load-shedding, gate and blinds, motion, people, doorbell, weather, water, irrigation, appliances, EV charger, network, geyser, amp, a single camera, or **your own custom section** with any name, icon, colour and entities.
+One Lovelace card for the whole house. At the top: a greeting with a live clock, a **who's home** strip with each person's photo, status chips, and scene buttons. Below that are collapsible **sections** you pick yourself, in any order and as many as you like: lights, security, climate, TV, audio, solar and load-shedding, gate and blinds, motion, people, doorbell, weather, water, irrigation, appliances, EV charger, network, geyser, amp, a single camera, or **your own custom section** with any name, icon, colour and entities.
 
 Only one section is open at a time, and each device remembers which one was last open.
 
@@ -29,6 +29,10 @@ No other cards are required. Camera live views use Home Assistant's own picture 
    - move sections up and down, delete them, or **Add section** of any type;
    - **Scan my home** again at any time to rebuild the sections.
 3. Or use YAML: see [`examples/full-house.yaml`](examples/full-house.yaml) for every section type.
+
+### TV and audio are separate (v2.2)
+
+**Scan my home** now puts TVs, Apple TVs and streaming boxes in a **TV** section and speakers, Sonos, amps and receivers in an **Audio** section. Both look and work exactly like the old *TV & audio* section. Existing `type: media` sections keep working; to split one, change it to `type: tv` and add a `type: audio` section for the speakers (or tap **Scan my home**).
 
 ### Upgrading from v1
 
@@ -74,7 +78,7 @@ The card shows whatever Home Assistant says the person's location is, so you set
 | `presence` | List of `person.*` entities for the who's-home strip. Each can be `{ entity, name, picture }`. |
 | `scenes` | Scene buttons: `entity` (script, scene, automation, button), `name`, `label`, `icon`, `style` (`night`, `morning`, `away`, `dusk`), `color`, `text_color`. |
 | `sections` | The list of sections, in order (see below). |
-| `hide_chips` | Chips to keep off the top row, e.g. `[alarm, lights, doors]`. Keys: `people`, `lights`, `alarm`, `doors`, `locks`, `temperature`, `humidity`, `ac`, `motion`, `media`, `solar`, `battery`, `loadshedding`, `covers`, `geyser`, `weather`, `irrigation`, `appliances`, `ev`, `network`, `doorbell`, `custom`. |
+| `hide_chips` | Chips to keep off the top row, e.g. `[alarm, lights, doors]`. Keys: `people`, `lights`, `alarm`, `doors`, `locks`, `temperature`, `humidity`, `ac`, `motion`, `tv`, `audio`, `media` (both), `solar`, `battery`, `loadshedding`, `covers`, `geyser`, `weather`, `irrigation`, `appliances`, `ev`, `network`, `doorbell`, `custom`. |
 | `chips` | `false` hides all chips. |
 | `max_chips` | Most chips shown at once (default 12). |
 | `max_width` | Caps the card width, e.g. `560px` in a panel view. |
@@ -105,7 +109,9 @@ Tap a tile to use it; press and hold any entity for its more-info dialog.
 | `lights` | Light tiles that glow when on, and **All off** | `entities` (each: `name`, `room`, `icon`), `columns` |
 | `security` | Alarm ring with Disarm / Home / Away / Night, camera tiles (tap for live), doors and windows, locks | `alarm` (or `{ entity, code }`), `modes` (e.g. `[arm_home, arm_away]`), `cameras` (each: `name`, `motion` sensor that makes the tile glow, `card` for your own live card, `refresh` seconds), `contacts`, `locks`. If the alarm needs a code, a code box appears. |
 | `climate` | AC dial with − / +, modes, fan speed; tabs for several ACs; temperature and humidity rings | `entities` (climate), `sensors` (each: `name`, `temperature`, `humidity`), `motion`, `step` |
-| `media` | Now playing with art, controls, volume, app or source buttons; tabs for several players | `entities` (media players, each can have `room`), `apps` (each: `name`, `source`, `image`, `icon`, `color`, or `action` + `data`; in the editor tap **Upload logo** or drop a picture: it's resized to 256×256 and saved in Home Assistant, no URL needed), `apps_style: chips`, `apps_position: top`, `show_app_names`, `remote_card` (any card, e.g. Firemote), `player` (`compact` = small now-playing strip with your remote front and centre, the default when `remote_card` is set; `full` = big built-in player with controls and volume) |
+| `tv` | TVs, Apple TV, streaming boxes: now playing with art, controls, volume, app or source buttons; tabs for several players | `entities` (media players, each can have `room`), `apps` (each: `name`, `source`, `image`, `icon`, `color`, or `action` + `data`; in the editor tap **Upload logo** or drop a picture: it's resized to 256×256 and saved in Home Assistant, no URL needed), `apps_style: chips`, `apps_position: top`, `show_app_names`, `remote_card` (any card, e.g. Firemote), `player` (`compact` = small now-playing strip with your remote front and centre, the default when `remote_card` is set; `full` = big built-in player with controls and volume) |
+| `audio` | Speakers, Sonos, amps, receivers: same player and options as `tv`, in its own section | same options as `tv` |
+| `media` | TVs and speakers together in one section (the older layout; still works) | same options as `tv` |
 | `energy` | Solar → home / battery / grid flow, load-shedding banner, today's kWh | `solar`, `load`, `grid`, `grid_invert`, `battery_power`, `battery_invert` (Sunsynk/Deye: positive = discharging), `battery_soc`, `battery_capacity` (kWh, for hours left), `loadshedding_stage`, `loadshedding_area` (works with the Load Shedding integration), `solar_today`, `load_today`, `grid_today`, `battery_low` |
 | `covers` | Gate and garage with one Open / Close / Stop button, blinds with up / stop / down and position | `entities` (each: `kind`: `gate`, `blind` or `pulse` for a relay/button that opens a gate) |
 | `motion` | Each sensor with a 24-hour activity strip from history | `entities`, `history: false` |

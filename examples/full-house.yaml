@@ -110,12 +110,11 @@ sections:
         temperature: sensor.snzb_02d_sonoff_a480150b1e_temperature
         humidity: sensor.snzb_02d_sonoff_a480150b1e_humidity
 
-  - type: media
-    name: TV & audio
+  - type: tv
+    name: TV
     entities:
       - entity: media_player.living_room_living_room_2
         name: Lounge TV
-      - media_player.kitchen_speaker
     remote_card:                                # your remote card; with one set, the remote is front and centre
       type: custom:firemote-card
       entity: media_player.living_room_living_room_2
@@ -136,6 +135,13 @@ sections:
       - name: Prime
         source: Prime Video
         image: /local/apps/prime.png
+
+  - type: audio
+    name: Audio
+    entities:
+      - entity: media_player.kitchen_speaker
+        name: Kitchen
+    # same options as tv: apps, apps_style, player, remote_card …
 
   - type: energy
     name: Solar & power
